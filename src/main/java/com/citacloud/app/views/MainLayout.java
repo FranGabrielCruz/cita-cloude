@@ -1,0 +1,147 @@
+package com.citacloud.app.views;
+
+import com.citacloud.app.security.AuthService;
+import com.citacloud.app.security.TenantUserDetails;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.applayout.AppLayout;
+import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.Scroller;
+import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.component.sidenav.SideNav;
+import com.vaadin.flow.component.sidenav.SideNavItem;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+
+public class MainLayout extends AppLayout {
+
+    public MainLayout() {
+        setPrimarySection(Section.DRAWER);
+        addDrawerContent();
+        addHeaderContent();
+    }
+
+    private void addHeaderContent() {
+        DrawerToggle toggle = new DrawerToggle();
+        toggle.getElement().setAttribute("aria-label", "Menu toggle");
+
+        ComboBox<String> branchSelect = new ComboBox<>();
+        branchSelect.setItems("Clínica San Rafael", "Sucursal Norte", "Sucursal Este");
+        branchSelect.setValue("Clínica San Rafael");
+        branchSelect.setPrefixComponent(VaadinIcon.BUILDING.create());
+        branchSelect.setWidth("220px");
+
+        Button searchBtn = new Button(VaadinIcon.SEARCH.create());
+        searchBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+        Button bellBtn = new Button(VaadinIcon.BELL.create());
+        bellBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+        Button helpBtn = new Button(VaadinIcon.QUESTION_CIRCLE.create());
+        helpBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+        TenantUserDetails user = AuthService.getAuthenticatedUser();
+        String userName = (user != null) ? user.getNombreCompleto() : "Usuario";
+        String empresaNombre = (user != null) ? user.getEmpresaNombre() : "CitaCloud";
+
+        RouterLink empresaActual = new RouterLink(empresaNombre, DashboardView.class);
+        empresaActual.getStyle()
+                .set("font-weight", "600")
+                .set("color", "#1e293b")
+                .set("font-size", "1rem")
+                .set("text-decoration", "none")
+                .set("cursor", "pointer");
+
+        Avatar avatar = new Avatar(userName);
+
+        MenuBar userMenu = new MenuBar();
+        userMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
+
+        var menuBtn = userMenu.addItem(avatar);
+        menuBtn.add(new Span(" " + userName));
+        menuBtn.getSubMenu().addItem("Mi Perfil", e -> {});
+        menuBtn.getSubMenu().addItem("Cerrar Sesión", e -> {
+            AuthService.logout();
+            UI.getCurrent().getPage().setLocation("login");
+        });
+
+        HorizontalLayout headerRight = new HorizontalLayout(bellBtn, userMenu);
+        headerRight.setAlignItems(FlexComponent.Alignment.CENTER);
+        headerRight.setSpacing(true);
+
+        HorizontalLayout headerLeft = new HorizontalLayout(toggle, empresaActual);
+        headerLeft.setAlignItems(FlexComponent.Alignment.CENTER);
+        headerLeft.setSpacing(true);
+
+        HorizontalLayout header = new HorizontalLayout(headerLeft, headerRight);
+        header.setWidthFull();
+        header.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+        header.setAlignItems(FlexComponent.Alignment.CENTER);
+        header.addClassNames(LumoUtility.Padding.Horizontal.MEDIUM);
+
+        addToNavbar(true, header);
+    }
+
+    private void addDrawerContent() {
+        // Brand Header
+        Div logoIcon = new Div(VaadinIcon.HOSPITAL.create());
+        logoIcon.getStyle()
+                .set("width", "36px")
+                .set("height", "36px")
+                .set("background-color", "#1565D8")
+                .set("color", "#ffffff")
+                .set("border-radius", "8px")
+                .set("display", "flex")
+                .set("align-items", "center")
+                .set("justify-content", "center")
+                .set("font-size", "1.25rem");
+
+        H2 brandTitle = new H2("CitaCloud");
+        brandTitle.getStyle()
+                .set("margin", "0")
+                .set("font-size", "1.25rem")
+                .set("font-weight", "800")
+                .set("color", "#1565D8");
+
+        Span brandSub = new Span("Medical Management");
+        brandSub.getStyle()
+                .set("font-size", "0.6875rem")
+                .set("color", "#64748b")
+                .set("display", "block");
+
+        Header header = new Header(new HorizontalLayout(logoIcon, new Div(brandTitle, brandSub)));
+        header.addClassNames(LumoUtility.Padding.MEDIUM);
+
+        Scroller scroller = new Scroller(createNavigation());
+        scroller.addClassNames(LumoUtility.Padding.SMALL);
+
+        addToDrawer(header, scroller);
+    }
+
+    private SideNav createNavigation() {
+        SideNav nav = new SideNav();
+
+        nav.addItem(new SideNavItem("Dashboard", DashboardView.class, VaadinIcon.DASHBOARD.create()));
+        nav.addItem(new SideNavItem("Citas", CitasView.class, VaadinIcon.CALENDAR.create()));
+        nav.addItem(new SideNavItem("Pacientes", PacientesView.class, VaadinIcon.USERS.create()));
+        nav.addItem(new SideNavItem("Médicos", MedicosView.class, VaadinIcon.DOCTOR.create()));
+        nav.addItem(new SideNavItem("Especialidades", EspecialidadesView.class, VaadinIcon.DIPLOMA.create()));
+        nav.addItem(new SideNavItem("Horarios", HorariosView.class, VaadinIcon.CLOCK.create()));
+        nav.addItem(new SideNavItem("Consultorios", ConsultoriosView.class, VaadinIcon.OFFICE.create()));
+        nav.addItem(new SideNavItem("Sucursales", SucursalesView.class, VaadinIcon.BUILDING.create()));
+        nav.addItem(new SideNavItem("Seguros", SegurosView.class, VaadinIcon.SHIELD.create()));
+        nav.addItem(new SideNavItem("Usuarios", UsuariosView.class, VaadinIcon.USER_CHECK.create()));
+        nav.addItem(new SideNavItem("Roles", RolesView.class, VaadinIcon.KEY.create()));
+        nav.addItem(new SideNavItem("Configuración", ConfiguracionView.class, VaadinIcon.COG.create()));
+
+        return nav;
+    }
+}

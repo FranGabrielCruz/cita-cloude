@@ -1,0 +1,45 @@
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# Repositorio local de Maven del proyecto
+.m2/
+
+# Vaadin / Vite / Node
+node_modules/
+.vaadin/
+frontend/generated/
+frontend/themes/*/generated/
+vite.generated.ts
+types.d.ts
+
+# Variables y configuracion local con credenciales
+.env
+.env.*
+!.env.example
+application-local.properties
+application-dev.properties
+
+# IDEs
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.vscode/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Archivos temporales y de respaldo
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
