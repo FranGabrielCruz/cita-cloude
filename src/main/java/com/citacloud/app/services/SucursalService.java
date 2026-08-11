@@ -20,6 +20,10 @@ public class SucursalService {
         return sucursalRepository.findByEmpresaId(empresaId);
     }
 
+    public List<Sucursal> listarActivas(UUID empresaId) {
+        return sucursalRepository.findByEmpresaIdAndActivaTrue(empresaId);
+    }
+
     public Sucursal guardar(Sucursal sucursal) {
         return sucursalRepository.save(sucursal);
     }

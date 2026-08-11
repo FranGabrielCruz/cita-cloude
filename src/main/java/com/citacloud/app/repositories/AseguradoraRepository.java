@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface AseguradoraRepository extends JpaRepository<Aseguradora, UUID> {
     List<Aseguradora> findByEmpresaId(UUID empresaId);
+    List<Aseguradora> findByEmpresaIdAndActivaTrue(UUID empresaId);
 }

@@ -43,7 +43,7 @@ public class Cita {
     private LocalTime horaFin;
 
     @Column(nullable = false, length = 30)
-    private String estado = "PENDIENTE";
+    private String estado = "CONFIRMADA";
 
     @Column(columnDefinition = "TEXT")
     private String motivo;

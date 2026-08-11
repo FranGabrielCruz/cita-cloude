@@ -33,6 +33,9 @@ public class Medico {
     private String apellido;
 
     @Column(length = 50)
+    private String cedula;
+
+    @Column(length = 50)
     private String exequatur;
 
     @Column(length = 30)
@@ -40,6 +43,10 @@ public class Medico {
 
     @Column(length = 100)
     private String email;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "sucursal_id")
+    private Sucursal sucursal;
 
     @Column(nullable = false)
     private Boolean activo = true;
@@ -75,6 +82,9 @@ public class Medico {
     public String getApellido() { return apellido; }
     public void setApellido(String apellido) { this.apellido = apellido; }
 
+    public String getCedula() { return cedula; }
+    public void setCedula(String cedula) { this.cedula = cedula; }
+
     public String getNombreCompleto() { return nombre + " " + apellido; }
 
     public String getExequatur() { return exequatur; }
@@ -85,6 +95,9 @@ public class Medico {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public Sucursal getSucursal() { return sucursal; }
+    public void setSucursal(Sucursal sucursal) { this.sucursal = sucursal; }
 
     public Boolean getActivo() { return activo; }
     public void setActivo(Boolean activo) { this.activo = activo; }

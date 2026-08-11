@@ -32,7 +32,9 @@ public class DashboardView extends VerticalLayout {
         this.dashboardService = dashboardService;
         this.sucursalService = sucursalService;
 
-        setSizeFull();
+        // El dashboard debe crecer con sus tarjetas y tablas para que el scroll
+        // de la aplicaci\u00f3n deje visible el contenido antes del footer fijo.
+        setWidthFull();
         setPadding(true);
         setSpacing(true);
         getStyle().set("background-color", "#f8fafc");

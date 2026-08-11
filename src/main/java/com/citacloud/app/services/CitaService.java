@@ -13,9 +13,11 @@ import java.util.UUID;
 public class CitaService {
 
     private final CitaRepository citaRepository;
+    private final DisponibilidadService disponibilidadService;
 
-    public CitaService(CitaRepository citaRepository) {
+    public CitaService(CitaRepository citaRepository, DisponibilidadService disponibilidadService) {
         this.citaRepository = citaRepository;
+        this.disponibilidadService = disponibilidadService;
     }
 
     public List<Cita> listarPorEmpresa(UUID empresaId) {
@@ -36,13 +38,14 @@ public class CitaService {
      */
     public Cita registrar(UUID empresaId, Cita cita) {
         validarDatos(empresaId, cita);
+        validarDisponibilidad(empresaId, cita, null);
         if (citaRepository.existsByEmpresaIdAndMedicoIdAndFechaAndHoraInicioLessThanAndHoraFinGreaterThan(
                 empresaId, cita.getMedico().getId(), cita.getFecha(), cita.getHoraFin(), cita.getHoraInicio())) {
             throw new IllegalArgumentException("El médico ya tiene una cita en ese horario.");
         }
 
         cita.setEmpresaId(empresaId);
-        cita.setEstado("PENDIENTE");
+        cita.setEstado("CONFIRMADA");
         return citaRepository.save(cita);
     }
 
@@ -51,6 +54,7 @@ public class CitaService {
             throw new IllegalArgumentException("La cita no existe.");
         }
         validarDatos(empresaId, cita);
+        validarDisponibilidad(empresaId, cita, cita.getId());
         boolean tieneConflicto = citaRepository.findByEmpresaId(empresaId).stream()
                 .filter(existente -> !existente.getId().equals(cita.getId()))
                 .anyMatch(existente -> existente.getMedico().getId().equals(cita.getMedico().getId())
@@ -61,6 +65,13 @@ public class CitaService {
             throw new IllegalArgumentException("El médico ya tiene una cita en ese horario.");
         }
         return citaRepository.save(cita);
+    }
+
+    private void validarDisponibilidad(UUID empresaId, Cita cita, UUID citaExcluida) {
+        if (!disponibilidadService.estaDisponible(empresaId, cita.getMedico().getId(), cita.getFecha(),
+                cita.getHoraInicio(), cita.getHoraFin(), citaExcluida)) {
+            throw new IllegalArgumentException("No se puede crear la cita: el horario no est\u00e1 disponible por horario laboral, descanso, ausencia o una cita existente.");
+        }
     }
 
     private void validarDatos(UUID empresaId, Cita cita) {

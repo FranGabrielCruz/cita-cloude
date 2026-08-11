@@ -3,6 +3,7 @@ package com.citacloud.app.views;
 import com.citacloud.app.security.AuthService;
 import com.citacloud.app.security.TenantUserDetails;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.HasElement;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
@@ -23,10 +24,13 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 
 public class MainLayout extends AppLayout {
 
+    private static final String ESPACIO_FOOTER = "3.75rem";
+
     public MainLayout() {
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
         addHeaderContent();
+        addBodyFooter();
     }
 
     private void addHeaderContent() {
@@ -67,7 +71,6 @@ public class MainLayout extends AppLayout {
 
         var menuBtn = userMenu.addItem(avatar);
         menuBtn.add(new Span(" " + userName));
-        menuBtn.getSubMenu().addItem("Mi Perfil", e -> {});
         menuBtn.getSubMenu().addItem("Cerrar Sesión", e -> {
             AuthService.logout();
             UI.getCurrent().getPage().setLocation("login");
@@ -124,6 +127,36 @@ public class MainLayout extends AppLayout {
         scroller.addClassNames(LumoUtility.Padding.SMALL);
 
         addToDrawer(header, scroller);
+    }
+
+    private void addBodyFooter() {
+        Footer footer = new Footer(new Span("\u00a9 " + java.time.Year.now().getValue() + " CitaCloud · Gesti\u00f3n m\u00e9dica"));
+        footer.getStyle()
+                .set("position", "fixed")
+                .set("left", "var(--vaadin-app-layout-drawer-width, 0px)")
+                .set("right", "0")
+                .set("bottom", "0")
+                // El drawer debe quedar siempre por delante del footer al abrirse.
+                .set("z-index", "0")
+                .set("padding", "0.55rem 1.5rem")
+                .set("background-color", "#ffffff")
+                .set("color", "#64748b")
+                .set("font-size", "0.75rem")
+                .set("border-top", "1px solid #e2e8f0")
+                .set("text-align", "center");
+        getElement().appendChild(footer.getElement());
+    }
+
+    /**
+     * El pie de p\u00e1gina permanece fijo en el cuerpo de la aplicaci\u00f3n. Reservamos
+     * su altura en cada vista para que nunca cubra tablas, formularios ni acciones.
+     */
+    @Override
+    public void showRouterLayoutContent(HasElement content) {
+        content.getElement().getStyle()
+                .set("padding-bottom", ESPACIO_FOOTER)
+                .set("box-sizing", "border-box");
+        super.showRouterLayoutContent(content);
     }
 
     private SideNav createNavigation() {

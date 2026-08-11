@@ -20,6 +20,10 @@ public class ConsultorioService {
         return consultorioRepository.findByEmpresaId(empresaId);
     }
 
+    public List<Consultorio> listarActivos(UUID empresaId) {
+        return consultorioRepository.findByEmpresaIdAndActivoTrue(empresaId);
+    }
+
     public Consultorio guardar(Consultorio consultorio) {
         return consultorioRepository.save(consultorio);
     }

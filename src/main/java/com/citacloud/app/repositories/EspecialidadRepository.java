@@ -5,10 +5,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface EspecialidadRepository extends JpaRepository<Especialidad, UUID> {
     List<Especialidad> findByEmpresaId(UUID empresaId);
     List<Especialidad> findByEmpresaIdAndActivaTrue(UUID empresaId);
+    Optional<Especialidad> findByIdAndEmpresaId(UUID id, UUID empresaId);
+    boolean existsByEmpresaIdAndNombreIgnoreCase(UUID empresaId, String nombre);
 }

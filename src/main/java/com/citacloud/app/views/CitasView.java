@@ -83,13 +83,13 @@ public class CitasView extends VerticalLayout {
         consultorioFiltro.setPlaceholder("Seleccione consultorio");
         estadoFiltro.setPlaceholder("Seleccione estado");
         if (empresaId != null) {
-            pacienteFiltro.setItems(pacienteService.listarPorEmpresa(empresaId));
+            pacienteFiltro.setItems(pacienteService.listarActivos(empresaId));
             pacienteFiltro.setItemLabelGenerator(Paciente::getNombreCompleto);
             medicoFiltro.setItems(medicoService.listarActivos(empresaId));
             medicoFiltro.setItemLabelGenerator(Medico::getNombreCompleto);
-            sucursalFiltro.setItems(sucursalService.listarPorEmpresa(empresaId));
+            sucursalFiltro.setItems(sucursalService.listarActivas(empresaId));
             sucursalFiltro.setItemLabelGenerator(Sucursal::getNombre);
-            consultorioFiltro.setItems(consultorioService.listarPorEmpresa(empresaId));
+            consultorioFiltro.setItems(consultorioService.listarActivos(empresaId));
             consultorioFiltro.setItemLabelGenerator(Consultorio::getNombre);
         }
         sucursalFiltro.setClearButtonVisible(true);
@@ -101,12 +101,15 @@ public class CitasView extends VerticalLayout {
     private HorizontalLayout crearEncabezado() {
         H2 title = new H2("Agenda de Citas");
         title.getStyle().set("margin", "0").set("font-size", "1.5rem").set("font-weight", "800");
-        Button nuevaCita = new Button("Nueva", VaadinIcon.PLUS.create(), e -> abrirFormulario(null));
+        Button nuevaCita = new Button(VaadinIcon.PLUS.create(), e -> abrirFormulario(null));
+        nuevaCita.setTooltipText("Nueva cita");
         nuevaCita.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         nuevaCita.getStyle().set("background-color", "#16a34a").set("color", "#ffffff");
-        Button buscar = new Button("Buscar", VaadinIcon.SEARCH.create(), e -> actualizarCitas());
+        Button buscar = new Button(VaadinIcon.SEARCH.create(), e -> actualizarCitas());
+        buscar.setTooltipText("Buscar");
         buscar.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        Button limpiar = new Button("Limpiar", VaadinIcon.ERASER.create(), e -> limpiarFiltros());
+        Button limpiar = new Button(VaadinIcon.ERASER.create(), e -> limpiarFiltros());
+        limpiar.setTooltipText("Limpiar");
         limpiar.getStyle().set("background-color", "#e2e8f0").set("color", "#334155");
         HorizontalLayout acciones = new HorizontalLayout(nuevaCita, buscar, limpiar);
         acciones.setSpacing(false);
@@ -123,9 +126,9 @@ public class CitasView extends VerticalLayout {
         sucursalFiltro.addValueChangeListener(event -> {
             Sucursal sucursal = event.getValue();
             if (sucursal == null || empresaId == null) {
-                consultorioFiltro.setItems(empresaId == null ? List.of() : consultorioService.listarPorEmpresa(empresaId));
+                consultorioFiltro.setItems(empresaId == null ? List.of() : consultorioService.listarActivos(empresaId));
             } else {
-                consultorioFiltro.setItems(consultorioService.listarPorEmpresa(empresaId).stream()
+                consultorioFiltro.setItems(consultorioService.listarActivos(empresaId).stream()
                         .filter(c -> sucursal.getId().equals(c.getSucursal().getId())).toList());
             }
             consultorioFiltro.clear();
@@ -170,7 +173,8 @@ public class CitasView extends VerticalLayout {
             return estado;
         }).setHeader("ESTADO");
         grid.addComponentColumn(c -> {
-            Button editar = new Button("Editar", VaadinIcon.EDIT.create(), e -> abrirFormulario(c));
+            Button editar = new Button(VaadinIcon.EDIT.create(), e -> abrirFormulario(c));
+            editar.setTooltipText("Editar");
             editar.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
             return editar;
         }).setHeader("ACCIONES");
@@ -203,10 +207,10 @@ public class CitasView extends VerticalLayout {
         dialog.setHeaderTitle(esEdicion ? "Editar cita" : "Registrar nueva cita");
         dialog.setWidth("680px");
 
-        ComboBox<Paciente> paciente = selector("Paciente", pacienteService.listarPorEmpresa(empresaId), Paciente::getNombreCompleto);
+        ComboBox<Paciente> paciente = selector("Paciente", pacienteService.listarActivos(empresaId), Paciente::getNombreCompleto);
         ComboBox<Medico> medico = selector("Medico", medicoService.listarActivos(empresaId), Medico::getNombreCompleto);
-        ComboBox<Sucursal> sucursal = selector("Sucursal", sucursalService.listarPorEmpresa(empresaId), Sucursal::getNombre);
-        ComboBox<Consultorio> consultorio = selector("Consultorio", consultorioService.listarPorEmpresa(empresaId), Consultorio::getNombre);
+        ComboBox<Sucursal> sucursal = selector("Sucursal", sucursalService.listarActivas(empresaId), Sucursal::getNombre);
+        ComboBox<Consultorio> consultorio = selector("Consultorio", consultorioService.listarActivos(empresaId), Consultorio::getNombre);
         DatePicker fecha = new DatePicker("Fecha");
         fecha.setValue(LocalDate.now());
         TimePicker horaInicio = new TimePicker("Hora de inicio");
@@ -219,7 +223,7 @@ public class CitasView extends VerticalLayout {
 
         sucursal.addValueChangeListener(event -> {
             Sucursal seleccionada = event.getValue();
-            consultorio.setItems(seleccionada == null ? List.of() : consultorioService.listarPorEmpresa(empresaId).stream()
+            consultorio.setItems(seleccionada == null ? List.of() : consultorioService.listarActivos(empresaId).stream()
                     .filter(c -> seleccionada.getId().equals(c.getSucursal().getId())).toList());
             consultorio.clear();
         });
@@ -238,9 +242,10 @@ public class CitasView extends VerticalLayout {
         FormLayout formulario = new FormLayout(paciente, medico, sucursal, consultorio, fecha, horaInicio, horaFin, motivo);
         formulario.setColspan(motivo, 2);
         dialog.add(formulario);
-        Button cerrar = new Button("Cerrar", e -> dialog.close());
+        Button cerrar = new Button(VaadinIcon.CLOSE.create(), e -> dialog.close());
+        cerrar.setTooltipText("Cerrar");
         cerrar.getStyle().set("background-color", "#e2e8f0").set("color", "#1e293b");
-        Button guardar = new Button(esEdicion ? "Guardar" : "Registrar cita", VaadinIcon.DISC.create(), e -> {
+        Button guardar = new Button(VaadinIcon.DISC.create(), e -> {
             try {
                 Cita cita = esEdicion ? citaExistente : new Cita();
                 cita.setPaciente(paciente.getValue());
@@ -264,11 +269,13 @@ public class CitasView extends VerticalLayout {
                 Notification.show(exception.getMessage(), 4000, Notification.Position.MIDDLE);
             }
         });
+        guardar.setTooltipText("Guardar");
         guardar.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         guardar.getStyle().set("background-color", "#16a34a").set("color", "#ffffff");
         if (esEdicion) {
-            Button cancelarCita = new Button("Cancelar cita", VaadinIcon.CLOSE.create(),
+            Button cancelarCita = new Button(VaadinIcon.CLOSE.create(),
                     e -> confirmarCancelacion(citaExistente, dialog));
+            cancelarCita.setTooltipText("Cancelar cita");
             cancelarCita.setEnabled(!"CANCELADA".equals(citaExistente.getEstado()));
             cancelarCita.getStyle().set("background-color", "#dc2626").set("color", "#ffffff");
             dialog.getFooter().add(guardar, cancelarCita, cerrar);

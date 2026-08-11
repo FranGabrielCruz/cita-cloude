@@ -25,6 +25,10 @@ public class PacienteService {
         return pacienteRepository.findByEmpresaId(empresaId);
     }
 
+    public List<Paciente> listarActivos(UUID empresaId) {
+        return pacienteRepository.findByEmpresaIdAndActivoTrue(empresaId);
+    }
+
     public List<Paciente> buscar(UUID empresaId, String filtro) {
         if (filtro == null || filtro.isBlank()) {
             return listarPorEmpresa(empresaId);

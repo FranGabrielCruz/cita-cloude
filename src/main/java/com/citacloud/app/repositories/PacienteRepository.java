@@ -13,6 +13,7 @@ import java.util.UUID;
 @Repository
 public interface PacienteRepository extends JpaRepository<Paciente, UUID> {
     List<Paciente> findByEmpresaId(UUID empresaId);
+    List<Paciente> findByEmpresaIdAndActivoTrue(UUID empresaId);
     Optional<Paciente> findByIdAndEmpresaId(UUID id, UUID empresaId);
     boolean existsByEmpresaIdAndDocumento(UUID empresaId, String documento);
     long countByEmpresaId(UUID empresaId);

@@ -10,5 +10,6 @@ import java.util.UUID;
 @Repository
 public interface ConsultorioRepository extends JpaRepository<Consultorio, UUID> {
     List<Consultorio> findByEmpresaId(UUID empresaId);
+    List<Consultorio> findByEmpresaIdAndActivoTrue(UUID empresaId);
     List<Consultorio> findByEmpresaIdAndSucursalId(UUID empresaId, UUID sucursalId);
 }

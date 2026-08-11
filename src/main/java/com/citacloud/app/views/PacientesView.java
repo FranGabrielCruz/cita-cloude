@@ -1,9 +1,12 @@
 package com.citacloud.app.views;
 
+import com.citacloud.app.models.Aseguradora;
 import com.citacloud.app.models.Paciente;
 import com.citacloud.app.security.AuthService;
 import com.citacloud.app.security.TenantUserDetails;
 import com.citacloud.app.services.PacienteService;
+import com.citacloud.app.services.AseguradoraService;
+import com.citacloud.app.services.SeguroPacienteService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -32,10 +35,15 @@ import java.util.UUID;
 public class PacientesView extends VerticalLayout {
 
     private final PacienteService pacienteService;
+    private final AseguradoraService aseguradoraService;
+    private final SeguroPacienteService seguroPacienteService;
     private final Grid<Paciente> grid = new Grid<>(Paciente.class, false);
 
-    public PacientesView(PacienteService pacienteService) {
+    public PacientesView(PacienteService pacienteService, AseguradoraService aseguradoraService,
+                         SeguroPacienteService seguroPacienteService) {
         this.pacienteService = pacienteService;
+        this.aseguradoraService = aseguradoraService;
+        this.seguroPacienteService = seguroPacienteService;
         setSizeFull();
         setPadding(true);
         setSpacing(true);
@@ -50,15 +58,18 @@ public class PacientesView extends VerticalLayout {
         H2 titulo = new H2("Pacientes");
         titulo.getStyle().set("margin", "0").set("font-size", "1.5rem").set("font-weight", "800");
 
-        Button nuevo = new Button("Nuevo", VaadinIcon.PLUS.create(), e -> abrirModalPaciente(empresaId, null));
+        Button nuevo = new Button(VaadinIcon.PLUS.create(), e -> abrirModalPaciente(empresaId, null));
+        nuevo.setTooltipText("Nuevo paciente");
         nuevo.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         nuevo.getStyle().set("background-color", "#16a34a");
-        Button buscar = new Button("Buscar", VaadinIcon.SEARCH.create(), e -> actualizarBusqueda(empresaId, busqueda.getValue()));
+        Button buscar = new Button(VaadinIcon.SEARCH.create(), e -> actualizarBusqueda(empresaId, busqueda.getValue()));
+        buscar.setTooltipText("Buscar");
         buscar.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        Button limpiar = new Button("Limpiar", VaadinIcon.ERASER.create(), e -> {
+        Button limpiar = new Button(VaadinIcon.ERASER.create(), e -> {
             busqueda.clear();
             actualizarBusqueda(empresaId, "");
         });
+        limpiar.setTooltipText("Limpiar");
         limpiar.getStyle().set("background-color", "#e2e8f0").set("color", "#334155");
 
         HorizontalLayout acciones = new HorizontalLayout(nuevo, buscar, limpiar);
@@ -72,9 +83,12 @@ public class PacientesView extends VerticalLayout {
         ComboBox<String> estado = new ComboBox<>("Estado");
         estado.setItems("Todos", "Activo", "Inactivo");
         estado.setValue("Todos");
-        ComboBox<String> seguro = new ComboBox<>("Seguro");
-        seguro.setItems("Todos", "ARS Humano", "MAPFRE BHD", "Privado");
-        seguro.setValue("Todos");
+        ComboBox<Aseguradora> seguro = new ComboBox<>("Seguro");
+        seguro.setItemLabelGenerator(Aseguradora::getNombre);
+        seguro.setPlaceholder("Seleccione seguro");
+        if (empresaId != null) {
+            seguro.setItems(aseguradoraService.listarActivas(empresaId));
+        }
         HorizontalLayout filtros = new HorizontalLayout(busqueda, estado, seguro);
         filtros.setAlignItems(FlexComponent.Alignment.BASELINE);
         filtros.getStyle().set("background-color", "#ffffff").set("padding", "1rem")
@@ -91,37 +105,19 @@ public class PacientesView extends VerticalLayout {
         grid.addColumn(Paciente::getNombreCompleto).setHeader("PACIENTE");
         grid.addColumn(Paciente::getDocumento).setHeader("CÉDULA");
         grid.addColumn(Paciente::getTelefono).setHeader("TELÉFONO");
-        grid.addComponentColumn(p -> new Span("ARS Humano")).setHeader("SEGURO");
+        grid.addComponentColumn(p -> new Span(seguroPacienteService.nombreSeguroActivo(empresaId, p.getId())))
+                .setHeader("SEGURO");
         grid.addComponentColumn(p -> {
             Span estado = new Span(Boolean.TRUE.equals(p.getActivo()) ? "Activo" : "Inactivo");
             estado.addClassName(Boolean.TRUE.equals(p.getActivo()) ? "badge-activo" : "badge-inactivo");
             return estado;
         }).setHeader("ESTADO").setWidth("120px").setFlexGrow(0);
         grid.addComponentColumn(p -> {
-            Button editar = new Button("Editar", VaadinIcon.EDIT.create(), e -> abrirModalPaciente(empresaId, p));
+            Button editar = new Button(VaadinIcon.EDIT.create(), e -> abrirModalPaciente(empresaId, p));
+            editar.setTooltipText("Editar");
             editar.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-            boolean activo = Boolean.TRUE.equals(p.getActivo());
-            Button cambiarEstado = new Button(activo ? "Desactivar" : "Activar",
-                    activo ? VaadinIcon.BAN.create() : VaadinIcon.CHECK.create(), e -> {
-                try {
-                    if (activo) {
-                        pacienteService.desactivar(empresaId, p.getId());
-                    } else {
-                        pacienteService.activar(empresaId, p.getId());
-                    }
-                    actualizarBusqueda(empresaId, "");
-                    Notification.show(activo ? "Paciente desactivado correctamente." : "Paciente activado correctamente.",
-                            3000, Notification.Position.BOTTOM_START);
-                } catch (IllegalArgumentException exception) {
-                    Notification.show(exception.getMessage(), 3000, Notification.Position.MIDDLE);
-                }
-            });
-            cambiarEstado.getStyle().set("color", activo ? "#b91c1c" : "#15803d");
-            HorizontalLayout acciones = new HorizontalLayout(editar, cambiarEstado);
-            acciones.setSpacing(false);
-            acciones.getStyle().set("gap", "0.25rem");
-            return acciones;
-        }).setHeader("ACCIONES").setWidth("250px").setFlexGrow(0);
+            return editar;
+        }).setHeader("ACCIONES").setWidth("120px").setFlexGrow(0);
         grid.setWidthFull();
     }
 
@@ -143,9 +139,16 @@ public class PacientesView extends VerticalLayout {
         TextField apellido = new TextField("Apellido");
         TextField telefono = new TextField("Teléfono");
         EmailField email = new EmailField("Email");
+        ComboBox<Aseguradora> seguro = new ComboBox<>("Seguro");
+        TextField numeroPoliza = new TextField("N\u00famero de p\u00f3liza");
         cedula.setPlaceholder("000-0000000-0");
         telefono.setPlaceholder("(000) 000-0000");
         email.setPlaceholder("correo@ejemplo.com");
+        seguro.setPlaceholder("Seleccione seguro");
+        seguro.setItemLabelGenerator(Aseguradora::getNombre);
+        seguro.setClearButtonVisible(true);
+        seguro.setItems(aseguradoraService.listarActivas(empresaId));
+        numeroPoliza.setPlaceholder("Ingrese el n\u00famero de p\u00f3liza");
         cedula.setRequiredIndicatorVisible(true);
         nombre.setRequiredIndicatorVisible(true);
         apellido.setRequiredIndicatorVisible(true);
@@ -159,20 +162,32 @@ public class PacientesView extends VerticalLayout {
             apellido.setValue(pacienteExistente.getApellido());
             telefono.setValue(pacienteExistente.getTelefono() == null ? "" : pacienteExistente.getTelefono());
             email.setValue(pacienteExistente.getEmail() == null ? "" : pacienteExistente.getEmail());
+            seguroPacienteService.aseguradoraDelSeguroActivo(empresaId, pacienteExistente.getId())
+                    .ifPresent(seguro::setValue);
+            seguroPacienteService.obtenerActivo(empresaId, pacienteExistente.getId())
+                    .ifPresent(seguroPaciente -> numeroPoliza.setValue(seguroPaciente.getNumeroPoliza()));
         }
-        dialog.add(new FormLayout(cedula, nombre, apellido, telefono, email));
+        dialog.add(new FormLayout(cedula, nombre, apellido, telefono, email, seguro, numeroPoliza));
 
-        Button cerrar = new Button("Cerrar", e -> dialog.close());
+        Button cerrar = new Button(VaadinIcon.CLOSE.create(), e -> dialog.close());
+        cerrar.setTooltipText("Cerrar");
         cerrar.getStyle().set("background-color", "#e2e8f0").set("color", "#1e293b");
-        Button guardar = new Button("Guardar", VaadinIcon.DISC.create(), e -> {
+        Button guardar = new Button(VaadinIcon.DISC.create(), e -> {
             cedula.setValue(formatearCedula(cedula.getValue()));
             telefono.setValue(formatearTelefono(telefono.getValue()));
             if (!validarFormulario(cedula, nombre, apellido, telefono, email)) {
                 return;
             }
+            if (seguro.getValue() != null && numeroPoliza.isEmpty()) {
+                numeroPoliza.setInvalid(true);
+                numeroPoliza.setErrorMessage("Ingresa el nÃºmero de pÃ³liza.");
+                return;
+            }
+            numeroPoliza.setInvalid(false);
             try {
+                Paciente pacienteGuardado;
                 if (esEdicion) {
-                    pacienteService.actualizar(empresaId, pacienteExistente.getId(), cedula.getValue(), nombre.getValue(),
+                    pacienteGuardado = pacienteService.actualizar(empresaId, pacienteExistente.getId(), cedula.getValue(), nombre.getValue(),
                             apellido.getValue(), telefono.getValue(), email.getValue());
                 } else {
                     Paciente paciente = new Paciente();
@@ -182,8 +197,9 @@ public class PacientesView extends VerticalLayout {
                     paciente.setApellido(apellido.getValue());
                     paciente.setTelefono(telefono.getValue());
                     paciente.setEmail(email.getValue());
-                    pacienteService.guardar(paciente);
+                    pacienteGuardado = pacienteService.guardar(paciente);
                 }
+                seguroPacienteService.actualizarSeguro(empresaId, pacienteGuardado.getId(), seguro.getValue(), numeroPoliza.getValue());
             } catch (IllegalArgumentException exception) {
                 Notification.show(exception.getMessage(), 4000, Notification.Position.MIDDLE);
                 return;
@@ -192,9 +208,32 @@ public class PacientesView extends VerticalLayout {
             dialog.close();
             Notification.show(esEdicion ? "Paciente actualizado con éxito" : "Paciente registrado con éxito");
         });
+        guardar.setTooltipText("Guardar");
         guardar.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         guardar.getStyle().set("background-color", "#16a34a").set("color", "#ffffff");
-        dialog.getFooter().add(guardar, cerrar);
+        dialog.getFooter().add(guardar);
+        if (esEdicion) {
+            boolean activo = Boolean.TRUE.equals(pacienteExistente.getActivo());
+            Button cambiarEstado = new Button(activo ? VaadinIcon.BAN.create() : VaadinIcon.CHECK.create(), e -> {
+                try {
+                    if (activo) {
+                        pacienteService.desactivar(empresaId, pacienteExistente.getId());
+                    } else {
+                        pacienteService.activar(empresaId, pacienteExistente.getId());
+                    }
+                    dialog.close();
+                    actualizarBusqueda(empresaId, "");
+                    Notification.show(activo ? "Paciente desactivado correctamente." : "Paciente activado correctamente.",
+                            3000, Notification.Position.BOTTOM_START);
+                } catch (IllegalArgumentException exception) {
+                    Notification.show(exception.getMessage(), 3000, Notification.Position.MIDDLE);
+                }
+            });
+            cambiarEstado.setTooltipText(activo ? "Desactivar paciente" : "Activar paciente");
+            cambiarEstado.getStyle().set("background-color", activo ? "#dc2626" : "#16a34a").set("color", "#ffffff");
+            dialog.getFooter().add(cambiarEstado);
+        }
+        dialog.getFooter().add(cerrar);
         dialog.open();
     }
 
