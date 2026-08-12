@@ -46,9 +46,6 @@ public class MainLayout extends AppLayout {
         Button searchBtn = new Button(VaadinIcon.SEARCH.create());
         searchBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
-        Button bellBtn = new Button(VaadinIcon.BELL.create());
-        bellBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-
         Button helpBtn = new Button(VaadinIcon.QUESTION_CIRCLE.create());
         helpBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
@@ -76,7 +73,7 @@ public class MainLayout extends AppLayout {
             UI.getCurrent().getPage().setLocation("login");
         });
 
-        HorizontalLayout headerRight = new HorizontalLayout(bellBtn, userMenu);
+        HorizontalLayout headerRight = new HorizontalLayout(userMenu);
         headerRight.setAlignItems(FlexComponent.Alignment.CENTER);
         headerRight.setSpacing(true);
 
@@ -169,7 +166,6 @@ public class MainLayout extends AppLayout {
         nav.addItem(new SideNavItem("Especialidades", EspecialidadesView.class, VaadinIcon.DIPLOMA.create()));
         nav.addItem(new SideNavItem("Horarios", HorariosView.class, VaadinIcon.CLOCK.create()));
         nav.addItem(new SideNavItem("Consultorios", ConsultoriosView.class, VaadinIcon.OFFICE.create()));
-        nav.addItem(new SideNavItem("Sucursales", SucursalesView.class, VaadinIcon.BUILDING.create()));
         nav.addItem(new SideNavItem("Seguros", SegurosView.class, VaadinIcon.SHIELD.create()));
         nav.addItem(new SideNavItem("Usuarios", UsuariosView.class, VaadinIcon.USER_CHECK.create()));
         nav.addItem(new SideNavItem("Roles", RolesView.class, VaadinIcon.KEY.create()));
