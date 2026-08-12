@@ -1,163 +1,45 @@
 package com.citacloud.app.views;
 
-import com.vaadin.flow.component.checkbox.Checkbox;
+import com.citacloud.app.models.Permiso;
+import com.citacloud.app.models.Rol;
+import com.citacloud.app.security.AuthService;
+import com.citacloud.app.security.TenantUserDetails;
+import com.citacloud.app.services.RolService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.checkbox.CheckboxGroup;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-
 import jakarta.annotation.security.PermitAll;
+import java.util.List;
+import java.util.UUID;
 
 @Route(value = "roles", layout = MainLayout.class)
-@PageTitle("Gestión de Roles y Permisos | CitaCloud")
+@PageTitle("Roles | CitaCloud")
 @PermitAll
+@CssImport("./styles/mobile-layouts.css")
 public class RolesView extends VerticalLayout {
-
-    public RolesView() {
-        setSizeFull();
-        setPadding(true);
-        setSpacing(true);
-        getStyle().set("background-color", "#f8fafc");
-
-        // Title
-        H2 title = new H2("Gestión de Roles y Permisos");
-        title.getStyle().set("margin", "0").set("font-size", "1.5rem").set("font-weight", "800");
-
-        Paragraph subtitle = new Paragraph("Configura los niveles de acceso para los usuarios de tu organización.");
-        subtitle.getStyle().set("color", "#64748b").set("margin", "0 0 1rem 0");
-
-        // Alert Banner (matching desing/roles.png)
-        Div alertBanner = new Div();
-        alertBanner.getStyle()
-                .set("background-color", "#eff6ff")
-                .set("border", "1px solid #bfdbfe")
-                .set("border-radius", "12px")
-                .set("padding", "1rem 1.25rem")
-                .set("display", "flex")
-                .set("align-items", "flex-start")
-                .set("gap", "0.75rem")
-                .set("width", "100%");
-
-        Div infoIcon = new Div(VaadinIcon.INFO_CIRCLE.create());
-        infoIcon.getStyle().set("color", "#2563eb").set("font-size", "1.25rem");
-
-        Div alertText = new Div();
-        H4 alertTitle = new H4("Alcance de los permisos");
-        alertTitle.getStyle().set("margin", "0 0 0.25rem 0").set("color", "#1e3a8a").set("font-size", "0.9375rem");
-        Paragraph alertBody = new Paragraph("Los permisos configurados en esta sección se aplican de manera exclusiva dentro del entorno de la empresa actual (Clínica San Rafael). No afectan el acceso a otras organizaciones.");
-        alertBody.getStyle().set("margin", "0").set("color", "#1e40af").set("font-size", "0.84375rem");
-        alertText.add(alertTitle, alertBody);
-
-        alertBanner.add(infoIcon, alertText);
-
-        // 2-Column Split
-        HorizontalLayout mainSplit = new HorizontalLayout();
-        mainSplit.setWidthFull();
-        mainSplit.setSpacing(true);
-
-        // Left Column: Roles List
-        VerticalLayout rolesCol = new VerticalLayout();
-        rolesCol.setWidth("35%");
-        rolesCol.getStyle()
-                .set("background-color", "#ffffff")
-                .set("border-radius", "12px")
-                .set("border", "1px solid #e2e8f0")
-                .set("padding", "1.25rem");
-
-        HorizontalLayout rolesHeader = new HorizontalLayout(new H3("Roles del Sistema"), new Button(VaadinIcon.PLUS.create()));
-        rolesHeader.setWidthFull();
-        rolesHeader.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
-
-        Div role1 = createRoleItem("Administrador", "Acceso total al sistema.", false);
-        Div role2 = createRoleItem("Médico", "Gestión de consultas y pacientes propios.", false);
-        Div role3 = createRoleItem("Recepcionista", "Gestión de citas y agenda general.", true);
-
-        rolesCol.add(rolesHeader, role1, role2, role3);
-
-        // Right Column: Role Editor
-        VerticalLayout editorCol = new VerticalLayout();
-        editorCol.setWidth("65%");
-        editorCol.getStyle()
-                .set("background-color", "#ffffff")
-                .set("border-radius", "12px")
-                .set("border", "1px solid #e2e8f0")
-                .set("padding", "1.5rem");
-
-        H3 editTitle = new H3("Editando Rol");
-        editTitle.getStyle().set("margin", "0 0 1rem 0");
-
-        TextField nameField = new TextField("Nombre del Rol");
-        nameField.setValue("Recepcionista");
-        nameField.setWidth("48%");
-
-        TextField descField = new TextField("Descripción (Opcional)");
-        descField.setValue("Gestión de citas y agenda general.");
-        descField.setWidth("48%");
-
-        HorizontalLayout formFields = new HorizontalLayout(nameField, descField);
-        formFields.setWidthFull();
-
-        // Permission Groups
-        H4 dashTitle = new H4("Dashboard");
-        HorizontalLayout dashPerms = new HorizontalLayout(new Checkbox("Ver", true));
-
-        H4 citasTitle = new H4("Citas");
-        HorizontalLayout citasPerms = new HorizontalLayout(
-                new Checkbox("Ver", true),
-                new Checkbox("Crear", true),
-                new Checkbox("Editar", true),
-                new Checkbox("Cancelar", false),
-                new Checkbox("Reprogramar", false)
-        );
-
-        H4 pacientesTitle = new H4("Pacientes");
-        HorizontalLayout pacPerms = new HorizontalLayout(
-                new Checkbox("Ver", true),
-                new Checkbox("Crear", true),
-                new Checkbox("Editar", false),
-                new Checkbox("Eliminar", false)
-        );
-
-        // Actions
-        Button discardBtn = new Button("Descartar");
-        Button saveBtn = new Button("Guardar Cambios");
-        saveBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        saveBtn.getStyle().set("background-color", "#1565D8");
-
-        HorizontalLayout actions = new HorizontalLayout(discardBtn, saveBtn);
-        actions.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        actions.setWidthFull();
-
-        editorCol.add(editTitle, formFields, new Hr(), dashTitle, dashPerms, citasTitle, citasPerms, pacientesTitle, pacPerms, new Hr(), actions);
-
-        mainSplit.add(rolesCol, editorCol);
-        add(title, subtitle, alertBanner, mainSplit);
-    }
-
-    private Div createRoleItem(String name, String desc, boolean selected) {
-        Div item = new Div();
-        item.setWidthFull();
-        item.getStyle()
-                .set("padding", "0.875rem 1rem")
-                .set("border-radius", "8px")
-                .set("margin-bottom", "0.5rem")
-                .set("border", selected ? "1px solid #1565D8" : "1px solid #f1f5f9")
-                .set("background-color", selected ? "#f0f6ff" : "#ffffff")
-                .set("cursor", "pointer");
-
-        H4 itemTitle = new H4(name);
-        itemTitle.getStyle().set("margin", "0").set("color", selected ? "#1565D8" : "#1e293b").set("font-size", "0.9375rem");
-
-        Paragraph itemDesc = new Paragraph(desc);
-        itemDesc.getStyle().set("margin", "0").set("color", "#64748b").set("font-size", "0.8125rem");
-
-        item.add(itemTitle, itemDesc);
-        return item;
-    }
+    private final RolService rolService; private final UUID empresaId; private final Grid<Rol> grid = new Grid<>(Rol.class, false);
+    private final TextField nombreFiltro = new TextField("Nombre"); private final ComboBox<String> estadoFiltro = new ComboBox<>("Estado");
+    public RolesView(RolService rolService) { this.rolService = rolService; TenantUserDetails sesion = AuthService.getAuthenticatedUser(); empresaId = sesion == null ? null : sesion.getEmpresaId(); setSizeFull(); setPadding(true); setSpacing(true); configurarFiltros(); configurarTabla(); add(encabezado(), filtros(), grid); actualizar(); }
+    private void configurarFiltros() { nombreFiltro.setPlaceholder("Buscar por nombre"); nombreFiltro.setPrefixComponent(VaadinIcon.SEARCH.create()); estadoFiltro.setItems("Activo", "Inactivo"); estadoFiltro.setPlaceholder("Seleccione estado"); }
+    private HorizontalLayout encabezado() { H2 titulo = new H2("Roles"); titulo.getStyle().set("margin", "0").set("font-size", "1.5rem").set("font-weight", "800"); Button nuevo = new Button(VaadinIcon.PLUS.create(), e -> formulario(null)); nuevo.setTooltipText("Nuevo rol"); nuevo.addThemeVariants(ButtonVariant.LUMO_PRIMARY); nuevo.getStyle().set("background", "#16a34a").set("color", "white"); Button buscar = new Button(VaadinIcon.SEARCH.create(), e -> actualizar()); buscar.setTooltipText("Buscar"); buscar.addThemeVariants(ButtonVariant.LUMO_PRIMARY); Button limpiar = new Button(VaadinIcon.ERASER.create(), e -> { nombreFiltro.clear(); estadoFiltro.clear(); actualizar(); }); limpiar.setTooltipText("Limpiar"); limpiar.getStyle().set("background", "#e2e8f0").set("color", "#334155"); HorizontalLayout acciones = new HorizontalLayout(nuevo,buscar,limpiar); acciones.setSpacing(false); acciones.getStyle().set("gap","0.35rem"); HorizontalLayout fila = new HorizontalLayout(titulo,acciones); fila.setWidthFull(); fila.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN); fila.setAlignItems(FlexComponent.Alignment.CENTER); return fila; }
+    private HorizontalLayout filtros() { HorizontalLayout filtros = new HorizontalLayout(nombreFiltro,estadoFiltro); filtros.addClassName("mobile-stacked-filters"); filtros.setWidthFull(); filtros.setFlexGrow(1,nombreFiltro,estadoFiltro); filtros.getStyle().set("background","#fff").set("padding","1rem").set("border-radius","12px").set("border","1px solid #e2e8f0"); return filtros; }
+    private void configurarTabla() { grid.addColumn(Rol::getNombre).setHeader("ROL"); grid.addColumn(Rol::getDescripcion).setHeader("DESCRIPCI\u00d3N"); grid.addComponentColumn(rol -> { Span estado = new Span(Boolean.TRUE.equals(rol.getActivo()) ? "Activo" : "Inactivo"); estado.addClassName(Boolean.TRUE.equals(rol.getActivo()) ? "badge-activo" : "badge-inactivo"); return estado; }).setHeader("ESTADO").setWidth("120px").setFlexGrow(0); grid.addComponentColumn(rol -> { Button editar = new Button(VaadinIcon.EDIT.create(), e -> formulario(rol)); editar.setTooltipText("Editar"); editar.addThemeVariants(ButtonVariant.LUMO_TERTIARY); return editar; }).setHeader("ACCIONES").setWidth("115px").setFlexGrow(0); grid.setWidthFull(); }
+    private void actualizar() { if (empresaId == null) { grid.setItems(List.of()); return; } Boolean activo = "Activo".equals(estadoFiltro.getValue()) ? Boolean.TRUE : "Inactivo".equals(estadoFiltro.getValue()) ? Boolean.FALSE : null; grid.setItems(rolService.buscar(empresaId,nombreFiltro.getValue(),activo)); }
+    private void formulario(Rol existente) { if (empresaId == null) { Notification.show("No se pudo identificar la empresa de la sesi\u00f3n."); return; } boolean edicion = existente != null; Dialog dialog = new Dialog(); dialog.setHeaderTitle(edicion ? "Editar Rol" : "Nuevo Rol"); dialog.setWidth("650px"); TextField nombre = new TextField("Nombre del rol"); nombre.setRequiredIndicatorVisible(true); TextArea descripcion = new TextArea("Descripci\u00f3n"); descripcion.setWidthFull(); CheckboxGroup<Permiso> permisos = new CheckboxGroup<>("Opciones visibles en el men\u00fa"); List<Permiso> opcionesMenu = rolService.permisosMenu(); permisos.setItems(opcionesMenu); permisos.setItemLabelGenerator(Permiso::getNombre); if (edicion) { nombre.setValue(existente.getNombre()); descripcion.setValue(existente.getDescripcion() == null ? "" : existente.getDescripcion()); java.util.Set<UUID> permisosGuardados = existente.getPermisos().stream().map(Permiso::getId).collect(java.util.stream.Collectors.toSet()); permisos.setValue(opcionesMenu.stream().filter(opcion -> permisosGuardados.contains(opcion.getId())).collect(java.util.stream.Collectors.toSet())); } FormLayout datos = new FormLayout(nombre,descripcion); datos.setColspan(descripcion,2); dialog.add(datos,permisos); Button guardar = new Button(VaadinIcon.DISC.create(), e -> { try { if(edicion) rolService.actualizar(empresaId,existente.getId(),nombre.getValue(),descripcion.getValue(),permisos.getValue()); else rolService.crear(empresaId,nombre.getValue(),descripcion.getValue(),permisos.getValue()); dialog.close(); actualizar(); Notification.show(edicion ? "Rol actualizado." : "Rol creado.",3000,Notification.Position.BOTTOM_START); } catch(IllegalArgumentException ex) { Notification.show(ex.getMessage(),4000,Notification.Position.MIDDLE); } }); guardar.setTooltipText("Guardar"); guardar.addThemeVariants(ButtonVariant.LUMO_PRIMARY); guardar.getStyle().set("background","#16a34a").set("color","white"); Button cerrar = new Button(VaadinIcon.CLOSE.create(),e->dialog.close()); cerrar.setTooltipText("Cerrar"); cerrar.getStyle().set("background","#e2e8f0").set("color","#1e293b"); dialog.getFooter().add(guardar); if(edicion) { boolean activo=Boolean.TRUE.equals(existente.getActivo()); Button estado=new Button(activo?VaadinIcon.BAN.create():VaadinIcon.CHECK.create(),e->{ try { rolService.cambiarEstado(empresaId,existente.getId(),!activo); dialog.close(); actualizar(); Notification.show(activo?"Rol desactivado.":"Rol activado.",3000,Notification.Position.BOTTOM_START); } catch(IllegalArgumentException ex){Notification.show(ex.getMessage(),4000,Notification.Position.MIDDLE);} }); estado.setTooltipText(activo?"Desactivar rol":"Activar rol"); estado.getStyle().set("background",activo?"#dc2626":"#16a34a").set("color","white"); dialog.getFooter().add(estado); } dialog.getFooter().add(cerrar); dialog.open(); }
 }

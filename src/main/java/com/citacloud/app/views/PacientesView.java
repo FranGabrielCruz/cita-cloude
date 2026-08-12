@@ -9,6 +9,7 @@ import com.citacloud.app.services.AseguradoraService;
 import com.citacloud.app.services.SeguroPacienteService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -32,6 +33,7 @@ import java.util.UUID;
 @Route(value = "pacientes", layout = MainLayout.class)
 @PageTitle("Pacientes | CitaCloud")
 @PermitAll
+@CssImport("./styles/mobile-layouts.css")
 public class PacientesView extends VerticalLayout {
 
     private final PacienteService pacienteService;
@@ -90,6 +92,8 @@ public class PacientesView extends VerticalLayout {
             seguro.setItems(aseguradoraService.listarActivas(empresaId));
         }
         HorizontalLayout filtros = new HorizontalLayout(busqueda, estado, seguro);
+        filtros.addClassName("mobile-stacked-filters");
+        filtros.setWidthFull();
         filtros.setAlignItems(FlexComponent.Alignment.BASELINE);
         filtros.getStyle().set("background-color", "#ffffff").set("padding", "1rem")
                 .set("border-radius", "12px").set("border", "1px solid #e2e8f0");

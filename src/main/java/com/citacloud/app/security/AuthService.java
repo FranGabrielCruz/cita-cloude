@@ -79,7 +79,9 @@ public class AuthService {
 
         // 6. Roles y authorities
         List<SimpleGrantedAuthority> authorities = usuario.getRoles().stream()
-                .map(r -> new SimpleGrantedAuthority("ROLE_" + r.getNombre()))
+                .flatMap(rol -> java.util.stream.Stream.concat(
+                        java.util.stream.Stream.of(new SimpleGrantedAuthority("ROLE_" + rol.getNombre())),
+                        rol.getPermisos().stream().map(permiso -> new SimpleGrantedAuthority(permiso.getCodigo()))))
                 .collect(Collectors.toList());
 
         TenantUserDetails userDetails = new TenantUserDetails(

@@ -2,6 +2,7 @@ package com.citacloud.app.services;
 
 import com.citacloud.app.models.Cita;
 import com.citacloud.app.repositories.CitaRepository;
+import com.citacloud.app.repositories.MedicoRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -14,18 +15,26 @@ public class CitaService {
 
     private final CitaRepository citaRepository;
     private final DisponibilidadService disponibilidadService;
+    private final MedicoRepository medicoRepository;
 
-    public CitaService(CitaRepository citaRepository, DisponibilidadService disponibilidadService) {
+    public CitaService(CitaRepository citaRepository, DisponibilidadService disponibilidadService,
+                       MedicoRepository medicoRepository) {
         this.citaRepository = citaRepository;
         this.disponibilidadService = disponibilidadService;
+        this.medicoRepository = medicoRepository;
     }
 
     public List<Cita> listarPorEmpresa(UUID empresaId) {
-        return citaRepository.findByEmpresaId(empresaId);
+        return citaRepository.findByEmpresaIdOrderByCreadoEnDesc(empresaId);
     }
 
     public List<Cita> listarPorFecha(UUID empresaId, LocalDate fecha) {
-        return citaRepository.findByEmpresaIdAndFecha(empresaId, fecha);
+        return citaRepository.findByEmpresaIdAndFechaOrderByCreadoEnDesc(empresaId, fecha);
+    }
+
+    public Optional<java.time.LocalTime> obtenerHoraFinSugerida(UUID empresaId, UUID medicoId, LocalDate fecha, java.time.LocalTime inicio) {
+        if (empresaId == null || medicoId == null || fecha == null || inicio == null) return Optional.empty();
+        return disponibilidadService.obtenerHoraFinSugerida(empresaId, medicoId, fecha, inicio);
     }
 
     public Cita guardar(Cita cita) {
@@ -108,6 +117,36 @@ public class CitaService {
             throw new IllegalArgumentException("La cita ya está cancelada.");
         }
         cita.setEstado("CANCELADA");
+        citaRepository.save(cita);
+    }
+
+    /** Cambia el estado cl\u00ednico de una cita con control de responsabilidades. */
+    public void cambiarEstadoClinico(UUID empresaId, UUID citaId, UUID usuarioId, boolean esAdministrador,
+                                     boolean esMedico, boolean esSecretaria, String nuevoEstado) {
+        Cita cita = citaRepository.findById(citaId)
+                .filter(encontrada -> empresaId.equals(encontrada.getEmpresaId()))
+                .orElseThrow(() -> new IllegalArgumentException("Cita no encontrada para esta empresa."));
+        if ("CANCELADA".equals(cita.getEstado()) || "ATENDIDA".equals(cita.getEstado()) || "NO_ASISTIO".equals(cita.getEstado())) {
+            throw new IllegalArgumentException("No se puede cambiar el estado de una cita cancelada, atendida o marcada como no asistió.");
+        }
+        if ("EN_ESPERA".equals(nuevoEstado)) {
+            if (!esAdministrador && !esSecretaria) throw new IllegalArgumentException("Solo la secretaria puede marcar la cita en espera.");
+        } else if ("NO_ASISTIO".equals(nuevoEstado)) {
+            if (!esAdministrador && !esSecretaria) throw new IllegalArgumentException("Solo la secretaria puede marcar la cita como no asistió.");
+        } else if ("EN_CONSULTA".equals(nuevoEstado) || "ATENDIDA".equals(nuevoEstado)) {
+            boolean esMedicoDeLaCita = esMedico && medicoRepository.findByEmpresaId(empresaId).stream()
+                    .anyMatch(medico -> usuarioId.equals(medico.getUsuarioId()) && medico.getId().equals(cita.getMedico().getId()));
+            if (!esAdministrador && !esMedicoDeLaCita) throw new IllegalArgumentException("Solo el m\u00e9dico asignado puede cambiar este estado.");
+            if ("EN_CONSULTA".equals(nuevoEstado) && !"CONFIRMADA".equals(cita.getEstado()) && !"EN_ESPERA".equals(cita.getEstado()) && !esAdministrador) {
+                throw new IllegalArgumentException("La cita debe estar confirmada o en espera antes de iniciar la consulta.");
+            }
+            if ("ATENDIDA".equals(nuevoEstado) && !"EN_CONSULTA".equals(cita.getEstado()) && !esAdministrador) {
+                throw new IllegalArgumentException("La cita debe estar en consulta antes de marcarla como atendida.");
+            }
+        } else {
+            throw new IllegalArgumentException("Estado de cita no permitido.");
+        }
+        cita.setEstado(nuevoEstado);
         citaRepository.save(cita);
     }
 }

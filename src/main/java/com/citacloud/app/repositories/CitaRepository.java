@@ -15,6 +15,8 @@ import java.util.UUID;
 public interface CitaRepository extends JpaRepository<Cita, UUID> {
     List<Cita> findByEmpresaId(UUID empresaId);
     List<Cita> findByEmpresaIdAndFecha(UUID empresaId, LocalDate fecha);
+    List<Cita> findByEmpresaIdOrderByCreadoEnDesc(UUID empresaId);
+    List<Cita> findByEmpresaIdAndFechaOrderByCreadoEnDesc(UUID empresaId, LocalDate fecha);
     List<Cita> findByEmpresaIdAndFechaBetween(UUID empresaId, LocalDate inicio, LocalDate fin);
     boolean existsByEmpresaIdAndMedicoIdAndFechaAndHoraInicioLessThanAndHoraFinGreaterThan(
             UUID empresaId, UUID medicoId, LocalDate fecha, LocalTime horaFin, LocalTime horaInicio);

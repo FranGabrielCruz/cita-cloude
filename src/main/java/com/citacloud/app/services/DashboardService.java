@@ -50,10 +50,16 @@ public class DashboardService {
 
     public ResumenEstadosHoy getResumenEstadosHoy(UUID empresaId) {
         List<Cita> citasHoy = citaRepository.findByEmpresaIdAndFecha(empresaId, LocalDate.now());
-        long confirmadas = contarPorEstado(citasHoy, "CONFIRMADA");
         long pendientes = contarPorEstado(citasHoy, "PENDIENTE");
+        long confirmadas = contarPorEstado(citasHoy, "CONFIRMADA");
+        long enEspera = contarPorEstado(citasHoy, "EN_ESPERA");
+        long enConsulta = contarPorEstado(citasHoy, "EN_CONSULTA");
+        long atendidas = contarPorEstado(citasHoy, "ATENDIDA");
         long canceladas = contarPorEstado(citasHoy, "CANCELADA");
-        return new ResumenEstadosHoy(citasHoy.size(), confirmadas, pendientes, canceladas);
+        long reprogramadas = contarPorEstado(citasHoy, "REPROGRAMADA");
+        long noAsistio = contarPorEstado(citasHoy, "NO_ASISTIO");
+        return new ResumenEstadosHoy(citasHoy.size(), pendientes, confirmadas, enEspera, enConsulta, atendidas,
+                canceladas, reprogramadas, noAsistio);
     }
 
     private long contarPorEstado(List<Cita> citas, String estado) {
@@ -70,5 +76,7 @@ public class DashboardService {
                 .toList();
     }
 
-    public record ResumenEstadosHoy(long total, long confirmadas, long pendientes, long canceladas) {}
+    public record ResumenEstadosHoy(long total, long pendientes, long confirmadas, long enEspera,
+                                    long enConsulta, long atendidas, long canceladas,
+                                    long reprogramadas, long noAsistio) {}
 }

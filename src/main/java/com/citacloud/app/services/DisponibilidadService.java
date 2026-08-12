@@ -15,6 +15,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
 
 @Service
 public class DisponibilidadService {
@@ -53,6 +54,15 @@ public class DisponibilidadService {
                     && !ocupado(empresaId, medicoId, fecha, inicio, fin, citaExcluida)) return true;
         }
         return false;
+    }
+    public Optional<LocalTime> obtenerHoraFinSugerida(UUID empresaId, UUID medicoId, LocalDate fecha, LocalTime inicio) {
+        int dia = fecha.getDayOfWeek().getValue();
+        return horarioRepository.findByEmpresaIdAndMedicoIdAndDiaSemanaAndActivoTrue(empresaId, medicoId, dia).stream()
+                .filter(horario -> !inicio.isBefore(horario.getHoraInicio()))
+                .map(horario -> new java.util.AbstractMap.SimpleEntry<>(horario, inicio.plusMinutes(horario.getDuracionCitaMinutos())))
+                .filter(par -> !par.getValue().isAfter(par.getKey().getHoraFin()))
+                .filter(par -> java.time.Duration.between(par.getKey().getHoraInicio(), inicio).toMinutes() % par.getKey().getDuracionCitaMinutos() == 0)
+                .map(java.util.Map.Entry::getValue).findFirst();
     }
     private boolean enDescanso(List<DescansoHorarioMedico> descansos, LocalTime inicio, LocalTime fin) { return descansos.stream().anyMatch(d -> inicio.isBefore(d.getHoraFin()) && fin.isAfter(d.getHoraInicio())); }
     private boolean enAusencia(UUID empresaId, UUID medicoId, LocalDate fecha, LocalTime inicio, LocalTime fin) {

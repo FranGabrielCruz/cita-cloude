@@ -87,7 +87,8 @@ public class MainLayout extends AppLayout {
         header.setAlignItems(FlexComponent.Alignment.CENTER);
         header.addClassNames(LumoUtility.Padding.Horizontal.MEDIUM);
 
-        addToNavbar(true, header);
+        // En pantallas t\u00e1ctiles el encabezado debe mantenerse arriba, no al pie.
+        addToNavbar(false, header);
     }
 
     private void addDrawerContent() {
@@ -160,6 +161,7 @@ public class MainLayout extends AppLayout {
         SideNav nav = new SideNav();
 
         nav.addItem(new SideNavItem("Dashboard", DashboardView.class, VaadinIcon.DASHBOARD.create()));
+        nav.addItem(new SideNavItem("Mi agenda", MiAgendaView.class, VaadinIcon.CALENDAR_CLOCK.create()));
         nav.addItem(new SideNavItem("Citas", CitasView.class, VaadinIcon.CALENDAR.create()));
         nav.addItem(new SideNavItem("Pacientes", PacientesView.class, VaadinIcon.USERS.create()));
         nav.addItem(new SideNavItem("Médicos", MedicosView.class, VaadinIcon.DOCTOR.create()));
@@ -171,6 +173,24 @@ public class MainLayout extends AppLayout {
         nav.addItem(new SideNavItem("Roles", RolesView.class, VaadinIcon.KEY.create()));
         nav.addItem(new SideNavItem("Configuración", ConfiguracionView.class, VaadinIcon.COG.create()));
 
+        aplicarPermisosMenu(nav);
         return nav;
+    }
+
+    private void aplicarPermisosMenu(SideNav nav) {
+        TenantUserDetails usuario = AuthService.getAuthenticatedUser();
+        if (usuario == null) {
+            return;
+        }
+        String[] permisos = {"MENU_DASHBOARD", "MENU_MI_AGENDA", "MENU_CITAS", "MENU_PACIENTES", "MENU_MEDICOS",
+                "MENU_ESPECIALIDADES", "MENU_HORARIOS", "MENU_CONSULTORIOS", "MENU_SEGUROS",
+                "MENU_USUARIOS", "MENU_ROLES", "MENU_CONFIGURACION"};
+        var elementos = nav.getElement().getChildren().toList();
+        for (int indice = 0; indice < elementos.size() && indice < permisos.length; indice++) {
+            String permiso = permisos[indice];
+            boolean permitido = usuario.getAuthorities().stream()
+                    .anyMatch(authority -> permiso.equals(authority.getAuthority()));
+            elementos.get(indice).setVisible(permitido);
+        }
     }
 }

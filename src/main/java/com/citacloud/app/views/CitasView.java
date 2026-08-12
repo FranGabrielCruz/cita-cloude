@@ -14,6 +14,8 @@ import com.citacloud.app.services.PacienteService;
 import com.citacloud.app.services.SucursalService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -40,6 +42,7 @@ import java.util.UUID;
 @Route(value = "citas", layout = MainLayout.class)
 @PageTitle("Agenda de Citas | CitaCloud")
 @PermitAll
+@CssImport("./styles/mobile-layouts.css")
 public class CitasView extends VerticalLayout {
 
     private final CitaService citaService;
@@ -65,8 +68,10 @@ public class CitasView extends VerticalLayout {
         TenantUserDetails user = AuthService.getAuthenticatedUser();
         this.empresaId = user == null ? null : user.getEmpresaId();
 
-        setSizeFull();
+        // La tabla debe crecer con sus filas; en m\u00f3vil una altura fija la dejaba sin espacio visible.
+        setWidthFull();
         setPadding(true);
+        setSpacing(true);
         configurarEncabezado();
         configurarFiltros();
         configurarTabla();
@@ -75,7 +80,8 @@ public class CitasView extends VerticalLayout {
     }
 
     private void configurarEncabezado() {
-        estadoFiltro.setItems("Todos", "PENDIENTE", "CONFIRMADA", "ATENDIDA", "CANCELADA");
+        estadoFiltro.setItems("Todos", "PENDIENTE", "CONFIRMADA", "EN_ESPERA", "EN_CONSULTA", "ATENDIDA", "CANCELADA");
+        estadoFiltro.setItemLabelGenerator(this::etiquetaEstado);
         estadoFiltro.setValue("Todos");
         pacienteFiltro.setPlaceholder("Seleccione paciente");
         medicoFiltro.setPlaceholder("Seleccione médico");
@@ -137,6 +143,7 @@ public class CitasView extends VerticalLayout {
 
     private HorizontalLayout crearBarraFiltros() {
         HorizontalLayout filtros = new HorizontalLayout(pacienteFiltro, medicoFiltro, sucursalFiltro, consultorioFiltro, estadoFiltro);
+        filtros.addClassName("mobile-stacked-filters");
         filtros.setWidthFull();
         filtros.setAlignItems(FlexComponent.Alignment.BASELINE);
         filtros.setFlexGrow(1, pacienteFiltro, medicoFiltro, sucursalFiltro, consultorioFiltro, estadoFiltro);
@@ -167,9 +174,9 @@ public class CitasView extends VerticalLayout {
         grid.addColumn(c -> c.getConsultorio() == null ? "-" : c.getConsultorio().getNombre()).setHeader("CONSULTORIO");
         grid.addColumn(Cita::getMotivo).setHeader("MOTIVO");
         grid.addComponentColumn(c -> {
-            Span estado = new Span(c.getEstado());
+            Span estado = new Span(etiquetaEstado(c.getEstado()));
             estado.addClassName("CANCELADA".equals(c.getEstado()) ? "badge-cancelada"
-                    : "PENDIENTE".equals(c.getEstado()) ? "badge-pendiente" : "badge-confirmada");
+                    : "PENDIENTE".equals(c.getEstado()) || "EN_ESPERA".equals(c.getEstado()) ? "badge-pendiente" : "badge-confirmada");
             return estado;
         }).setHeader("ESTADO");
         grid.addComponentColumn(c -> {
@@ -179,6 +186,8 @@ public class CitasView extends VerticalLayout {
             return editar;
         }).setHeader("ACCIONES");
         grid.setWidthFull();
+        grid.setAllRowsVisible(true);
+        grid.addClassName("citas-grid");
     }
 
     private void actualizarCitas() {
@@ -205,7 +214,7 @@ public class CitasView extends VerticalLayout {
         Dialog dialog = new Dialog();
         boolean esEdicion = citaExistente != null;
         dialog.setHeaderTitle(esEdicion ? "Editar cita" : "Registrar nueva cita");
-        dialog.setWidth("680px");
+        dialog.setWidth("760px");
 
         ComboBox<Paciente> paciente = selector("Paciente", pacienteService.listarActivos(empresaId), Paciente::getNombreCompleto);
         ComboBox<Medico> medico = selector("Medico", medicoService.listarActivos(empresaId), Medico::getNombreCompleto);
@@ -220,6 +229,8 @@ public class CitasView extends VerticalLayout {
         TextArea motivo = new TextArea("Motivo");
         motivo.setMaxLength(500);
         motivo.setWidthFull();
+        ComboBox<String> estado = new ComboBox<>("Estado");
+        estado.setItemLabelGenerator(this::etiquetaEstado);
 
         sucursal.addValueChangeListener(event -> {
             Sucursal seleccionada = event.getValue();
@@ -227,6 +238,9 @@ public class CitasView extends VerticalLayout {
                     .filter(c -> seleccionada.getId().equals(c.getSucursal().getId())).toList());
             consultorio.clear();
         });
+        medico.addValueChangeListener(event -> sugerirHoraFin(medico, fecha, horaInicio, horaFin));
+        fecha.addValueChangeListener(event -> sugerirHoraFin(medico, fecha, horaInicio, horaFin));
+        horaInicio.addValueChangeListener(event -> sugerirHoraFin(medico, fecha, horaInicio, horaFin));
 
         if (esEdicion) {
             paciente.setValue(citaExistente.getPaciente());
@@ -237,10 +251,17 @@ public class CitasView extends VerticalLayout {
             horaInicio.setValue(citaExistente.getHoraInicio());
             horaFin.setValue(citaExistente.getHoraFin());
             motivo.setValue(citaExistente.getMotivo() == null ? "" : citaExistente.getMotivo());
+            estado.setItems(estadosEditables(citaExistente));
+            estado.setValue(citaExistente.getEstado());
+        } else {
+            estado.setVisible(false);
         }
 
-        FormLayout formulario = new FormLayout(paciente, medico, sucursal, consultorio, fecha, horaInicio, horaFin, motivo);
+        // Dos columnas en computadora y una columna en pantallas peque\u00f1as.
+        FormLayout formulario = new FormLayout(paciente, medico, sucursal, consultorio, fecha, horaInicio, horaFin, motivo, estado);
+        formulario.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1), new FormLayout.ResponsiveStep("620px", 2));
         formulario.setColspan(motivo, 2);
+        formulario.setColspan(estado, 2);
         dialog.add(formulario);
         Button cerrar = new Button(VaadinIcon.CLOSE.create(), e -> dialog.close());
         cerrar.setTooltipText("Cerrar");
@@ -258,6 +279,9 @@ public class CitasView extends VerticalLayout {
                 cita.setMotivo(motivo.getValue());
                 if (esEdicion) {
                     citaService.actualizar(empresaId, cita);
+                    if (!citaExistente.getEstado().equals(estado.getValue())) {
+                        cambiarEstadoDesdeEdicion(citaExistente, estado.getValue());
+                    }
                 } else {
                     citaService.registrar(empresaId, cita);
                 }
@@ -278,11 +302,91 @@ public class CitasView extends VerticalLayout {
             cancelarCita.setTooltipText("Cancelar cita");
             cancelarCita.setEnabled(!"CANCELADA".equals(citaExistente.getEstado()));
             cancelarCita.getStyle().set("background-color", "#dc2626").set("color", "#ffffff");
-            dialog.getFooter().add(guardar, cancelarCita, cerrar);
+            dialog.getFooter().add(guardar);
+            agregarAccionesEstado(dialog, citaExistente);
+            dialog.getFooter().add(cancelarCita, cerrar);
         } else {
             dialog.getFooter().add(guardar, cerrar);
         }
         dialog.open();
+    }
+
+    private List<String> estadosEditables(Cita cita) {
+        TenantUserDetails usuario = AuthService.getAuthenticatedUser();
+        boolean administrador = tieneRol(usuario, "ADMINISTRADOR");
+        boolean medico = tieneRol(usuario, "MEDICO");
+        boolean secretaria = tieneRol(usuario, "SECRETARIA") || tieneRol(usuario, "RECEPCIONISTA");
+        if (administrador) return List.of(cita.getEstado(), "EN_ESPERA", "EN_CONSULTA", "ATENDIDA", "NO_ASISTIO").stream().distinct().toList();
+        if (secretaria && "CONFIRMADA".equals(cita.getEstado())) return List.of("CONFIRMADA", "EN_ESPERA", "NO_ASISTIO");
+        if (medico && ("CONFIRMADA".equals(cita.getEstado()) || "EN_ESPERA".equals(cita.getEstado()))) return List.of(cita.getEstado(), "EN_CONSULTA");
+        if (medico && "EN_CONSULTA".equals(cita.getEstado())) return List.of("EN_CONSULTA", "ATENDIDA");
+        return List.of(cita.getEstado());
+    }
+
+    private void cambiarEstadoDesdeEdicion(Cita cita, String nuevoEstado) {
+        TenantUserDetails usuario = AuthService.getAuthenticatedUser();
+        citaService.cambiarEstadoClinico(empresaId, cita.getId(), usuario.getUsuarioId(),
+                tieneRol(usuario, "ADMINISTRADOR"), tieneRol(usuario, "MEDICO"),
+                tieneRol(usuario, "SECRETARIA") || tieneRol(usuario, "RECEPCIONISTA"), nuevoEstado);
+    }
+
+    private void sugerirHoraFin(ComboBox<Medico> medico, DatePicker fecha, TimePicker inicio, TimePicker fin) {
+        if (medico.getValue() == null || fecha.getValue() == null || inicio.getValue() == null) return;
+        citaService.obtenerHoraFinSugerida(empresaId, medico.getValue().getId(), fecha.getValue(), inicio.getValue())
+                .ifPresent(fin::setValue);
+    }
+
+    private String etiquetaEstado(String estado) {
+        if (estado == null) return "";
+        return switch (estado) {
+            case "EN_ESPERA" -> "En espera";
+            case "EN_CONSULTA" -> "En consulta";
+            case "CONFIRMADA" -> "Confirmada";
+            case "PENDIENTE" -> "Pendiente";
+            case "ATENDIDA" -> "Atendida";
+            case "CANCELADA" -> "Cancelada";
+            case "NO_ASISTIO" -> "No asistió";
+            default -> estado;
+        };
+    }
+
+    private void agregarAccionesEstado(Dialog dialog, Cita cita) {
+        TenantUserDetails usuario = AuthService.getAuthenticatedUser();
+        if (usuario == null || "CANCELADA".equals(cita.getEstado()) || "ATENDIDA".equals(cita.getEstado())) return;
+        boolean administrador = tieneRol(usuario, "ADMINISTRADOR");
+        boolean medico = tieneRol(usuario, "MEDICO");
+        boolean secretaria = tieneRol(usuario, "SECRETARIA") || tieneRol(usuario, "RECEPCIONISTA");
+        if ((administrador || secretaria) && "CONFIRMADA".equals(cita.getEstado())) {
+            dialog.getFooter().add(botonEstado(cita, "EN_ESPERA", "Marcar en espera", VaadinIcon.CLOCK, "#d97706"));
+        }
+        if ((administrador || medico) && "EN_ESPERA".equals(cita.getEstado())) {
+            dialog.getFooter().add(botonEstado(cita, "EN_CONSULTA", "Iniciar consulta", VaadinIcon.STETHOSCOPE, "#2563eb"));
+        }
+        if ((administrador || medico) && "EN_CONSULTA".equals(cita.getEstado())) {
+            dialog.getFooter().add(botonEstado(cita, "ATENDIDA", "Marcar atendida", VaadinIcon.CHECK_CIRCLE, "#16a34a"));
+        }
+    }
+
+    private Button botonEstado(Cita cita, String estado, String ayuda, VaadinIcon icono, String color) {
+        Button boton = new Button(icono.create(), evento -> {
+            TenantUserDetails usuario = AuthService.getAuthenticatedUser();
+            try {
+                citaService.cambiarEstadoClinico(empresaId, cita.getId(), usuario.getUsuarioId(),
+                        tieneRol(usuario, "ADMINISTRADOR"), tieneRol(usuario, "MEDICO"),
+                        tieneRol(usuario, "SECRETARIA") || tieneRol(usuario, "RECEPCIONISTA"), estado);
+                UI.getCurrent().getPage().reload();
+            } catch (IllegalArgumentException exception) {
+                Notification.show(exception.getMessage(), 4000, Notification.Position.MIDDLE);
+            }
+        });
+        boton.setTooltipText(ayuda);
+        boton.getStyle().set("background-color", color).set("color", "#ffffff");
+        return boton;
+    }
+
+    private boolean tieneRol(TenantUserDetails usuario, String rol) {
+        return usuario != null && usuario.getAuthorities().stream()
+                .anyMatch(authority -> ("ROLE_" + rol).equalsIgnoreCase(authority.getAuthority()));
     }
 
     private void confirmarCancelacion(Cita cita, Dialog dialogEdicion) {

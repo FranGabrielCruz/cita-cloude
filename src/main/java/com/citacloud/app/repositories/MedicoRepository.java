@@ -14,5 +14,6 @@ public interface MedicoRepository extends JpaRepository<Medico, UUID> {
     List<Medico> findByEmpresaIdAndActivoTrue(UUID empresaId);
     boolean existsByEmpresaIdAndCodigo(UUID empresaId, String codigo);
     Optional<Medico> findByIdAndEmpresaId(UUID id, UUID empresaId);
+    Optional<Medico> findByEmpresaIdAndUsuarioId(UUID empresaId, UUID usuarioId);
     long countByEmpresaIdAndActivoTrue(UUID empresaId);
 }

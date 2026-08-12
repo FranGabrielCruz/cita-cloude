@@ -7,6 +7,7 @@ import com.citacloud.app.services.DashboardService;
 import com.citacloud.app.services.SucursalService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -23,6 +24,7 @@ import java.util.UUID;
 @Route(value = "", layout = MainLayout.class)
 @PageTitle("Dashboard | CitaCloud")
 @PermitAll
+@CssImport("./styles/dashboard-responsive.css")
 public class DashboardView extends VerticalLayout {
 
     private final DashboardService dashboardService;
@@ -58,22 +60,24 @@ public class DashboardView extends VerticalLayout {
         headerRow.setAlignItems(FlexComponent.Alignment.CENTER);
 
         // Metrics Grid (4 cards matching desing/dashboard.png)
-        long pendientes = empresaId != null ? dashboardService.getCitasHoyPorEstado(empresaId, "PENDIENTE") : 0;
         long confirmadas = empresaId != null ? dashboardService.getCitasHoyPorEstado(empresaId, "CONFIRMADA") : 0;
         long atendidas = empresaId != null ? dashboardService.getCitasHoyPorEstado(empresaId, "ATENDIDA") : 0;
+        long canceladas = empresaId != null ? dashboardService.getCitasHoyPorEstado(empresaId, "CANCELADA") : 0;
         long medicos = empresaId != null ? dashboardService.getMedicosActivosCount(empresaId) : 0;
 
-        var card1 = createMetricCard("PENDIENTES", String.valueOf(pendientes), VaadinIcon.CLOCK, "#fff7ed", "#f97316");
-        var card2 = createMetricCard("CONFIRMADAS", String.valueOf(confirmadas), VaadinIcon.CHECK_CIRCLE, "#f0fdf4", "#16a34a");
-        var card3 = createMetricCard("PACIENTES ATENDIDOS", String.valueOf(atendidas), VaadinIcon.USERS, "#f0fdfa", "#0d9488");
+        var card1 = createMetricCard("CONFIRMADAS", String.valueOf(confirmadas), VaadinIcon.CHECK_CIRCLE, "#f0fdf4", "#16a34a");
+        var card2 = createMetricCard("PACIENTES ATENDIDOS", String.valueOf(atendidas), VaadinIcon.USERS, "#f0fdfa", "#0d9488");
+        var card3 = createMetricCard("CANCELADAS", String.valueOf(canceladas), VaadinIcon.CLOSE_CIRCLE, "#fef2f2", "#dc2626");
         var card4 = createMetricCard("MÉDICOS ACTIVOS", String.valueOf(medicos), VaadinIcon.DOCTOR, "#eff6ff", "#2563eb");
 
         HorizontalLayout metricsRow = new HorizontalLayout(card1, card2, card3, card4);
+        metricsRow.addClassName("dashboard-metrics");
         metricsRow.setWidthFull();
         metricsRow.setFlexGrow(1, card1, card2, card3, card4);
 
         // Main 2-Column Section
         HorizontalLayout mainSection = new HorizontalLayout();
+        mainSection.addClassName("dashboard-main");
         mainSection.setWidthFull();
         mainSection.setSpacing(true);
 
@@ -112,10 +116,12 @@ public class DashboardView extends VerticalLayout {
         }
 
         leftCol.add(tableTitle, grid);
+        leftCol.addClassName("dashboard-left");
         leftCol.setWidth("65%");
 
         // Right Column: Breakdown & Agenda Timeline Cards
         VerticalLayout rightCol = new VerticalLayout();
+        rightCol.addClassName("dashboard-right");
         rightCol.setWidth("35%");
         rightCol.setSpacing(true);
 
@@ -134,7 +140,7 @@ public class DashboardView extends VerticalLayout {
         Div summaryBox = new Div();
         summaryBox.getStyle().set("text-align", "center").set("padding", "1rem").set("background-color", "#f8fafc").set("border-radius", "8px");
         DashboardService.ResumenEstadosHoy resumenHoy = empresaId == null
-                ? new DashboardService.ResumenEstadosHoy(0, 0, 0, 0)
+                ? new DashboardService.ResumenEstadosHoy(0, 0, 0, 0, 0, 0, 0, 0, 0)
                 : dashboardService.getResumenEstadosHoy(empresaId);
         H2 totalNum = new H2(String.valueOf(resumenHoy.total()));
         totalNum.getStyle().set("margin", "0").set("color", "#1565D8");
@@ -144,9 +150,14 @@ public class DashboardView extends VerticalLayout {
 
         UnorderedList list = new UnorderedList();
         list.getStyle().set("list-style", "none").set("padding", "0").set("margin", "1rem 0 0 0");
-        list.add(new ListItem("🟢 Confirmadas: " + resumenHoy.confirmadas() + " (" + porcentaje(resumenHoy.confirmadas(), resumenHoy.total()) + ")"));
-        list.add(new ListItem("🟠 Pendientes: " + resumenHoy.pendientes() + " (" + porcentaje(resumenHoy.pendientes(), resumenHoy.total()) + ")"));
-        list.add(new ListItem("🔴 Canceladas: " + resumenHoy.canceladas() + " (" + porcentaje(resumenHoy.canceladas(), resumenHoy.total()) + ")"));
+        list.add(itemEstado("Pendientes", resumenHoy.pendientes(), resumenHoy.total(), "#f97316"));
+        list.add(itemEstado("Confirmadas", resumenHoy.confirmadas(), resumenHoy.total(), "#22c55e"));
+        list.add(itemEstado("En espera", resumenHoy.enEspera(), resumenHoy.total(), "#eab308"));
+        list.add(itemEstado("En consulta", resumenHoy.enConsulta(), resumenHoy.total(), "#2563eb"));
+        list.add(itemEstado("Atendidas", resumenHoy.atendidas(), resumenHoy.total(), "#0d9488"));
+        list.add(itemEstado("Canceladas", resumenHoy.canceladas(), resumenHoy.total(), "#ef4444"));
+        list.add(itemEstado("Reprogramadas", resumenHoy.reprogramadas(), resumenHoy.total(), "#8b5cf6"));
+        list.add(itemEstado("No asistió", resumenHoy.noAsistio(), resumenHoy.total(), "#64748b"));
 
         chartCard.add(chartTitle, summaryBox, list);
 
@@ -216,5 +227,12 @@ public class DashboardView extends VerticalLayout {
 
     private String porcentaje(long cantidad, long total) {
         return total == 0 ? "0%" : Math.round(cantidad * 100.0 / total) + "%";
+    }
+
+    private ListItem itemEstado(String nombre, long cantidad, long total, String color) {
+        Span punto = new Span();
+        punto.getStyle().set("display", "inline-block").set("width", "0.75rem").set("height", "0.75rem")
+                .set("margin-right", "0.5rem").set("border-radius", "50%").set("background-color", color);
+        return new ListItem(punto, new Span(nombre + ": " + cantidad + " (" + porcentaje(cantidad, total) + ")"));
     }
 }

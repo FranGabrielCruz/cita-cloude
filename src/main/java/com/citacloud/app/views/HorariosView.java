@@ -6,6 +6,7 @@ import com.citacloud.app.security.TenantUserDetails;
 import com.citacloud.app.services.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -36,6 +37,7 @@ import java.util.UUID;
 @Route(value = "horarios", layout = MainLayout.class)
 @PageTitle("Horarios | CitaCloud")
 @PermitAll
+@CssImport("./styles/mobile-layouts.css")
 public class HorariosView extends VerticalLayout {
     private final HorarioMedicoService horarioService; private final DescansoHorarioService descansoService; private final AusenciaMedicoService ausenciaService;
     private final MedicoService medicoService; private final SucursalService sucursalService; private final ConsultorioService consultorioService;
@@ -64,7 +66,7 @@ public class HorariosView extends VerticalLayout {
         HorizontalLayout acciones = new HorizontalLayout(nuevo, ausencia, buscar, limpiar); acciones.setSpacing(false); acciones.getStyle().set("gap", "0.35rem");
         HorizontalLayout row = new HorizontalLayout(titulo, acciones); row.setWidthFull(); row.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN); row.setAlignItems(FlexComponent.Alignment.CENTER); return row;
     }
-    private HorizontalLayout filtros() { HorizontalLayout filtros = new HorizontalLayout(medicoFiltro, sucursalFiltro); filtros.setWidthFull(); filtros.setFlexGrow(1, medicoFiltro, sucursalFiltro); filtros.getStyle().set("background", "#fff").set("padding", "1rem").set("border-radius", "12px").set("border", "1px solid #e2e8f0"); return filtros; }
+    private HorizontalLayout filtros() { HorizontalLayout filtros = new HorizontalLayout(medicoFiltro, sucursalFiltro); filtros.addClassName("mobile-stacked-filters"); filtros.setWidthFull(); filtros.setFlexGrow(1, medicoFiltro, sucursalFiltro); filtros.getStyle().set("background", "#fff").set("padding", "1rem").set("border-radius", "12px").set("border", "1px solid #e2e8f0"); return filtros; }
     private void configurarTabla() {
         grid.addColumn(h -> dia(h.getDiaSemana())).setHeader("D\u00cdA"); grid.addColumn(h -> h.getMedico().getNombreCompleto()).setHeader("M\u00c9DICO"); grid.addColumn(h -> h.getHoraInicio() + " - " + h.getHoraFin()).setHeader("HORARIO"); grid.addColumn(h -> h.getSucursal().getNombre()).setHeader("SUCURSAL"); grid.addColumn(h -> h.getConsultorio() == null ? "-" : h.getConsultorio().getNombre()).setHeader("CONSULTORIO"); grid.addColumn(h -> h.getDuracionCitaMinutos() + " min").setHeader("DURACI\u00d3N");
         grid.addComponentColumn(h -> { Span estado = new Span(Boolean.TRUE.equals(h.getActivo()) ? "Activo" : "Inactivo"); estado.addClassName(Boolean.TRUE.equals(h.getActivo()) ? "badge-activo" : "badge-inactivo"); return estado; }).setHeader("ESTADO");
@@ -81,7 +83,7 @@ public class HorariosView extends VerticalLayout {
     }
     private void actualizar() { List<HorarioMedico> items = empresaId == null ? List.of() : horarioService.listar(empresaId).stream().filter(h -> medicoFiltro.getValue() == null || h.getMedico().getId().equals(medicoFiltro.getValue().getId())).filter(h -> sucursalFiltro.getValue() == null || h.getSucursal().getId().equals(sucursalFiltro.getValue().getId())).toList(); grid.setItems(items); pintarSemanal(items); ausenciasGrid.setItems(empresaId == null ? List.of() : ausenciaService.listar(empresaId).stream().filter(a -> medicoFiltro.getValue() == null || a.getMedico().getId().equals(medicoFiltro.getValue().getId())).toList()); }
     private void pintarSemanal(List<HorarioMedico> items) {
-        semanal.removeAll(); semanal.getStyle().set("display", "grid").set("grid-template-columns", "repeat(7, minmax(115px, 1fr))").set("gap", "0.5rem").set("padding", "1rem").set("background", "#fff").set("border-radius", "12px");
+        semanal.removeAll(); semanal.addClassName("horarios-semanal"); semanal.getStyle().set("display", "grid").set("grid-template-columns", "repeat(7, minmax(115px, 1fr))").set("gap", "0.5rem").set("padding", "1rem").set("background", "#fff").set("border-radius", "12px");
         for (int i=1;i<=7;i++) { int diaActual = i; VerticalLayout columna = new VerticalLayout(); columna.setPadding(false); columna.setSpacing(false); columna.add(new H4(diaCorto(diaActual))); items.stream().filter(h -> h.getDiaSemana()==diaActual).forEach(h -> { Button bloque = new Button(h.getHoraInicio()+" - "+h.getHoraFin(), e -> detalleHorario(h)); bloque.setTooltipText(h.getSucursal().getNombre() + (h.getConsultorio() == null ? "" : " · " + h.getConsultorio().getNombre()) + " · " + h.getDuracionCitaMinutos() + " min"); bloque.setWidthFull(); bloque.getStyle().set("font-size", "0.8rem").set("margin-bottom", "0.35rem").set("min-height", "3.25rem").set("overflow", "hidden").set("white-space", "nowrap").set("text-overflow", "ellipsis").set("background", Boolean.TRUE.equals(h.getActivo()) ? "#dbeafe" : "#e2e8f0"); columna.add(bloque); }); semanal.add(columna); }
     }
     private void formularioHorario() {

@@ -1,191 +1,151 @@
 package com.citacloud.app.views;
 
+import com.citacloud.app.models.Empresa;
+import com.citacloud.app.models.Sucursal;
+import com.citacloud.app.security.AuthService;
+import com.citacloud.app.security.TenantUserDetails;
+import com.citacloud.app.services.EmpresaService;
+import com.citacloud.app.services.SucursalService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.progressbar.ProgressBar;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-
 import jakarta.annotation.security.PermitAll;
 
+import java.util.List;
+import java.util.UUID;
+
 @Route(value = "configuracion", layout = MainLayout.class)
-@PageTitle("Configuración del Tenant | CitaCloud")
+@PageTitle("Configuraci\u00f3n | CitaCloud")
 @PermitAll
 public class ConfiguracionView extends VerticalLayout {
 
-    public ConfiguracionView() {
-        setSizeFull();
+    private final EmpresaService empresaService;
+    private final SucursalService sucursalService;
+    private final UUID empresaId;
+    private final Grid<Sucursal> sucursales = new Grid<>(Sucursal.class, false);
+
+    public ConfiguracionView(EmpresaService empresaService, SucursalService sucursalService) {
+        this.empresaService = empresaService;
+        this.sucursalService = sucursalService;
+        TenantUserDetails usuario = AuthService.getAuthenticatedUser();
+        empresaId = usuario == null ? null : usuario.getEmpresaId();
+
+        setWidthFull();
         setPadding(true);
         setSpacing(true);
         getStyle().set("background-color", "#f8fafc");
 
-        // Header Section
-        H2 title = new H2("Configuración del Tenant");
-        title.getStyle().set("margin", "0").set("font-size", "1.5rem").set("font-weight", "800");
-
-        Span subtitle = new Span("Parámetros principales y sucursales de la institución.");
-        subtitle.getStyle().set("color", "#64748b").set("font-size", "0.875rem");
-
-        Span tenantBadge = new Span("⚡ Multitenant Activo  |  ID: T-48291");
-        tenantBadge.getStyle()
-                .set("background-color", "#eff6ff")
-                .set("color", "#1565D8")
-                .set("border", "1px solid #bfdbfe")
-                .set("padding", "0.375rem 0.875rem")
-                .set("border-radius", "8px")
-                .set("font-weight", "600")
-                .set("font-size", "0.8125rem");
-
-        HorizontalLayout headerRow = new HorizontalLayout(new Div(title, subtitle), tenantBadge);
-        headerRow.setWidthFull();
-        headerRow.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
-        headerRow.setAlignItems(FlexComponent.Alignment.CENTER);
-
-        // Top 2-Column Split
-        HorizontalLayout topSplit = new HorizontalLayout();
-        topSplit.setWidthFull();
-        topSplit.setSpacing(true);
-
-        // Left Card: Datos de la Institución
-        VerticalLayout instCard = new VerticalLayout();
-        instCard.setWidth("65%");
-        instCard.getStyle()
-                .set("background-color", "#ffffff")
-                .set("border-radius", "12px")
-                .set("border", "1px solid #e2e8f0")
-                .set("padding", "1.5rem");
-
-        HorizontalLayout instHeader = new HorizontalLayout(new H3("Datos de la Institución"), new Button("Editar Datos"));
-        instHeader.setWidthFull();
-        instHeader.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
-        instHeader.setAlignItems(FlexComponent.Alignment.CENTER);
-
-        TextField nameField = new TextField("Nombre de la Institución");
-        nameField.setValue("Clínica San Rafael");
-        nameField.setWidthFull();
-
-        TextField rncField = new TextField("RNC / Identificación");
-        rncField.setValue("101-99887-1");
-        rncField.setWidth("48%");
-
-        TextField telField = new TextField("Teléfono Principal");
-        telField.setValue("+1 (809) 555-0192");
-        telField.setWidth("48%");
-
-        HorizontalLayout row2 = new HorizontalLayout(rncField, telField);
-        row2.setWidthFull();
-
-        TextField dirField = new TextField("Dirección");
-        dirField.setValue("Av. Ensanche Clínico, Santo Domingo");
-        dirField.setWidthFull();
-
-        ComboBox<String> tzField = new ComboBox<>("Zona Horaria");
-        tzField.setItems("Santo Domingo (AST -04:00)", "Nueva York (EST -05:00)");
-        tzField.setValue("Santo Domingo (AST -04:00)");
-        tzField.setWidthFull();
-
-        instCard.add(instHeader, nameField, row2, dirField, tzField);
-
-        // Right Column: Logotipo + Resumen de Capacidad
-        VerticalLayout rightCol = new VerticalLayout();
-        rightCol.setWidth("35%");
-        rightCol.setSpacing(true);
-
-        // Card 1: Logotipo
-        VerticalLayout logoCard = new VerticalLayout();
-        logoCard.getStyle()
-                .set("background-color", "#ffffff")
-                .set("border-radius", "12px")
-                .set("border", "1px solid #e2e8f0")
-                .set("padding", "1.25rem")
-                .set("align-items", "center");
-
-        H3 logoTitle = new H3("Logotipo");
-        logoTitle.getStyle().set("margin", "0 0 0.5rem 0").set("align-self", "flex-start");
-
-        Div logoBox = new Div(VaadinIcon.BUILDING.create());
-        logoBox.getStyle()
-                .set("width", "100px")
-                .set("height", "80px")
-                .set("border", "2px dashed #cbd5e1")
-                .set("border-radius", "8px")
-                .set("display", "flex")
-                .set("align-items", "center")
-                .set("justify-content", "center")
-                .set("color", "#94a3b8")
-                .set("font-size", "2rem");
-
-        Button logoBtn = new Button("Cambiar Logo");
-        logoBtn.setWidthFull();
-
-        logoCard.add(logoTitle, logoBox, logoBtn);
-
-        // Card 2: Resumen de Capacidad (Blue Card)
-        VerticalLayout capacityCard = new VerticalLayout();
-        capacityCard.getStyle()
-                .set("background", "linear-gradient(135deg, #1565D8 0%, #0d47a1 100%)")
-                .set("color", "#ffffff")
-                .set("border-radius", "12px")
-                .set("padding", "1.25rem");
-
-        H3 capTitle = new H3("Resumen de Capacidad");
-        capTitle.getStyle().set("margin", "0 0 1rem 0").set("color", "#ffffff");
-
-        HorizontalLayout s1 = new HorizontalLayout(new Span("Sucursales Activas"), new Span("4 / 10"));
-        s1.setWidthFull();
-        s1.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
-        ProgressBar pb1 = new ProgressBar();
-        pb1.setValue(0.4);
-
-        HorizontalLayout s2 = new HorizontalLayout(new Span("Usuarios Límite"), new Span("120 / 500"));
-        s2.setWidthFull();
-        s2.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
-        ProgressBar pb2 = new ProgressBar();
-        pb2.setValue(0.24);
-
-        capacityCard.add(capTitle, s1, pb1, s2, pb2);
-
-        rightCol.add(logoCard, capacityCard);
-        topSplit.add(instCard, rightCol);
-
-        // Bottom Card: Sucursales Vinculadas
-        VerticalLayout botCard = new VerticalLayout();
-        botCard.setWidthFull();
-        botCard.getStyle()
-                .set("background-color", "#ffffff")
-                .set("border-radius", "12px")
-                .set("border", "1px solid #e2e8f0")
-                .set("padding", "1.5rem");
-
-        HorizontalLayout botHeader = new HorizontalLayout(new H3("Sucursales Vinculadas"), new Button("Nueva Sucursal", VaadinIcon.PLUS.create()));
-        botHeader.setWidthFull();
-        botHeader.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
-        botHeader.setAlignItems(FlexComponent.Alignment.CENTER);
-
-        Grid<String[]> sucGrid = new Grid<>();
-        sucGrid.addColumn(s -> s[0]).setHeader("CÓDIGO");
-        sucGrid.addColumn(s -> s[1]).setHeader("UBICACIÓN");
-        sucGrid.addComponentColumn(s -> {
-            Span chip = new Span("Activa");
-            chip.addClassName("badge-activo");
-            return chip;
-        }).setHeader("ESTADO");
-
-        sucGrid.setItems(
-                new String[]{"SUC-01", "Santo Domingo Central"},
-                new String[]{"SUC-02", "Santiago Norte"}
-        );
-
-        botCard.add(botHeader, sucGrid);
-
-        add(headerRow, topSplit, botCard);
+        H2 titulo = new H2("Configuraci\u00f3n");
+        titulo.getStyle().set("margin", "0").set("font-size", "1.5rem").set("font-weight", "800");
+        add(titulo, crearDatosInstitucion(), crearSucursales());
     }
+
+    private VerticalLayout crearDatosInstitucion() {
+        VerticalLayout tarjeta = tarjeta();
+        H3 subtitulo = new H3("Datos de la Instituci\u00f3n");
+        subtitulo.getStyle().set("margin", "0");
+        TextField nombre = new TextField("Nombre de la Instituci\u00f3n");
+        TextField rnc = new TextField("RNC / Identificaci\u00f3n");
+        TextField telefono = new TextField("Tel\u00e9fono principal");
+        TextField correo = new TextField("Correo electr\u00f3nico");
+        TextArea direccion = new TextArea("Direcci\u00f3n");
+        direccion.setWidthFull();
+        FormLayout formulario = new FormLayout(nombre, rnc, telefono, correo, direccion);
+        formulario.setWidthFull();
+        formulario.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1), new FormLayout.ResponsiveStep("650px", 2));
+        formulario.setColspan(nombre, 2);
+        formulario.setColspan(direccion, 2);
+
+        if (empresaId != null) {
+            try {
+                Empresa empresa = empresaService.buscar(empresaId);
+                nombre.setValue(valor(empresa.getNombre())); rnc.setValue(valor(empresa.getRncIdentificacion()));
+                telefono.setValue(valor(empresa.getTelefono())); correo.setValue(valor(empresa.getEmail())); direccion.setValue(valor(empresa.getDireccion()));
+            } catch (IllegalArgumentException ignored) { }
+        }
+        Button guardar = botonIcono(VaadinIcon.DISC.create(), "Guardar", "#16a34a", "white");
+        guardar.addClickListener(event -> {
+            try {
+                if (empresaId == null) throw new IllegalArgumentException("No se pudo identificar la instituci\u00f3n.");
+                empresaService.guardar(empresaId, nombre.getValue(), rnc.getValue(), telefono.getValue(), correo.getValue(), direccion.getValue());
+                Notification.show("Datos guardados.", 3000, Notification.Position.BOTTOM_START);
+            } catch (IllegalArgumentException ex) { Notification.show(ex.getMessage(), 4000, Notification.Position.MIDDLE); }
+        });
+        HorizontalLayout acciones = new HorizontalLayout(guardar);
+        acciones.setWidthFull(); acciones.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+        tarjeta.add(subtitulo, formulario, acciones);
+        return tarjeta;
+    }
+
+    private VerticalLayout crearSucursales() {
+        VerticalLayout tarjeta = tarjeta();
+        H3 subtitulo = new H3("Sucursales");
+        subtitulo.getStyle().set("margin", "0");
+        Button nueva = botonIcono(VaadinIcon.PLUS.create(), "Nueva sucursal", "#16a34a", "white");
+        nueva.addClickListener(event -> abrirSucursal(null));
+        HorizontalLayout cabecera = new HorizontalLayout(subtitulo, nueva);
+        cabecera.setWidthFull(); cabecera.setAlignItems(FlexComponent.Alignment.CENTER);
+        cabecera.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+
+        sucursales.addColumn(Sucursal::getCodigo).setHeader("C\u00d3DIGO").setWidth("130px").setFlexGrow(0);
+        sucursales.addColumn(Sucursal::getNombre).setHeader("NOMBRE");
+        sucursales.addColumn(Sucursal::getTelefono).setHeader("TEL\u00c9FONO");
+        sucursales.addComponentColumn(sucursal -> {
+            Span estado = new Span(Boolean.TRUE.equals(sucursal.getActiva()) ? "Activa" : "Inactiva");
+            estado.addClassName(Boolean.TRUE.equals(sucursal.getActiva()) ? "badge-activo" : "badge-inactivo");
+            return estado;
+        }).setHeader("ESTADO").setWidth("130px").setFlexGrow(0);
+        sucursales.addComponentColumn(sucursal -> {
+            Button editar = new Button(VaadinIcon.EDIT.create(), event -> abrirSucursal(sucursal));
+            editar.setTooltipText("Editar"); editar.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+            return editar;
+        }).setHeader("ACCIONES").setWidth("110px").setFlexGrow(0);
+        sucursales.setWidthFull(); sucursales.setAllRowsVisible(true);
+        cargarSucursales();
+        tarjeta.add(cabecera, sucursales);
+        return tarjeta;
+    }
+
+    private void abrirSucursal(Sucursal existente) {
+        if (empresaId == null) { Notification.show("No se pudo identificar la instituci\u00f3n."); return; }
+        boolean edicion = existente != null;
+        Dialog dialogo = new Dialog(); dialogo.setHeaderTitle(edicion ? "Editar sucursal" : "Nueva sucursal"); dialogo.setWidth("min(680px, 95vw)");
+        TextField codigo = new TextField("C\u00f3digo"); TextField nombre = new TextField("Nombre"); TextField telefono = new TextField("Tel\u00e9fono"); TextField correo = new TextField("Correo electr\u00f3nico"); TextArea direccion = new TextArea("Direcci\u00f3n"); direccion.setWidthFull();
+        if (edicion) { codigo.setValue(valor(existente.getCodigo())); nombre.setValue(valor(existente.getNombre())); telefono.setValue(valor(existente.getTelefono())); correo.setValue(valor(existente.getEmail())); direccion.setValue(valor(existente.getDireccion())); }
+        FormLayout formulario = new FormLayout(codigo, nombre, telefono, correo, direccion); formulario.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1), new FormLayout.ResponsiveStep("600px", 2)); formulario.setColspan(direccion, 2); formulario.setWidthFull();
+        Button guardar = botonIcono(VaadinIcon.DISC.create(), "Guardar", "#16a34a", "white");
+        guardar.addClickListener(event -> {
+            try {
+                if (codigo.isEmpty() || nombre.isEmpty()) throw new IllegalArgumentException("C\u00f3digo y nombre son obligatorios.");
+                Sucursal sucursal = edicion ? existente : new Sucursal();
+                sucursal.setEmpresaId(empresaId); sucursal.setCodigo(codigo.getValue().trim().toUpperCase()); sucursal.setNombre(nombre.getValue().trim()); sucursal.setTelefono(limpiar(telefono.getValue())); sucursal.setEmail(limpiar(correo.getValue())); sucursal.setDireccion(limpiar(direccion.getValue())); if (!edicion) sucursal.setActiva(true);
+                sucursalService.guardar(sucursal); cargarSucursales(); dialogo.close(); Notification.show("Sucursal guardada.", 3000, Notification.Position.BOTTOM_START);
+            } catch (IllegalArgumentException ex) { Notification.show(ex.getMessage(), 4000, Notification.Position.MIDDLE); }
+        });
+        Button cambiarEstado = null;
+        if (edicion) { boolean activa = Boolean.TRUE.equals(existente.getActiva()); cambiarEstado = botonIcono(activa ? VaadinIcon.BAN.create() : VaadinIcon.CHECK.create(), activa ? "Desactivar" : "Activar", activa ? "#dc2626" : "#16a34a", "white"); cambiarEstado.addClickListener(event -> { existente.setActiva(!activa); sucursalService.guardar(existente); cargarSucursales(); dialogo.close(); Notification.show(activa ? "Sucursal desactivada." : "Sucursal activada.", 3000, Notification.Position.BOTTOM_START); }); }
+        Button cerrar = botonIcono(VaadinIcon.CLOSE.create(), "Cerrar", "#e2e8f0", "#1e293b"); cerrar.addClickListener(event -> dialogo.close());
+        HorizontalLayout acciones = cambiarEstado == null ? new HorizontalLayout(guardar, cerrar) : new HorizontalLayout(guardar, cambiarEstado, cerrar);
+        dialogo.add(formulario); dialogo.getFooter().add(acciones); dialogo.open();
+    }
+
+    private void cargarSucursales() { sucursales.setItems(empresaId == null ? List.of() : sucursalService.listarPorEmpresa(empresaId)); }
+    private VerticalLayout tarjeta() { VerticalLayout tarjeta = new VerticalLayout(); tarjeta.setWidthFull(); tarjeta.getStyle().set("background-color", "#ffffff").set("border-radius", "12px").set("border", "1px solid #e2e8f0").set("padding", "1.5rem"); return tarjeta; }
+    private Button botonIcono(com.vaadin.flow.component.Component icono, String tooltip, String fondo, String color) { Button boton = new Button(icono); boton.setTooltipText(tooltip); boton.getStyle().set("background", fondo).set("color", color); return boton; }
+    private String valor(String texto) { return texto == null ? "" : texto; }
+    private String limpiar(String texto) { return texto == null || texto.isBlank() ? null : texto.trim(); }
 }
