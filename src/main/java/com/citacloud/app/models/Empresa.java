@@ -30,6 +30,9 @@ public class Empresa {
     @Column(columnDefinition = "TEXT")
     private String direccion;
 
+    @Column(name = "logo_url", length = 500)
+    private String logoUrl;
+
     @Column(nullable = false)
     private Boolean activa = true;
 
@@ -66,6 +69,9 @@ public class Empresa {
 
     public String getDireccion() { return direccion; }
     public void setDireccion(String direccion) { this.direccion = direccion; }
+
+    public String getLogoUrl() { return logoUrl; }
+    public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
 
     public Boolean getActiva() { return activa; }
     public void setActiva(Boolean activa) { this.activa = activa; }

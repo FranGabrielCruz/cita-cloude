@@ -2,6 +2,7 @@ package com.citacloud.app.views;
 
 import com.citacloud.app.security.AuthService;
 import com.citacloud.app.security.TenantUserDetails;
+import com.citacloud.app.services.EmpresaService;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.HasElement;
 import com.vaadin.flow.component.applayout.AppLayout;
@@ -25,8 +26,10 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 public class MainLayout extends AppLayout {
 
     private static final String ESPACIO_FOOTER = "3.75rem";
+    private final EmpresaService empresaService;
 
-    public MainLayout() {
+    public MainLayout(EmpresaService empresaService) {
+        this.empresaService = empresaService;
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
         addHeaderContent();
@@ -62,12 +65,22 @@ public class MainLayout extends AppLayout {
                 .set("cursor", "pointer");
 
         Avatar avatar = new Avatar(userName);
+        String logoEmpresa = obtenerLogoEmpresa(user);
+        if (logoEmpresa != null) {
+            avatar.setImage(logoEmpresa);
+        }
+        avatar.getStyle().set("margin-right", "0.45rem");
 
         MenuBar userMenu = new MenuBar();
         userMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
 
         var menuBtn = userMenu.addItem(avatar);
         menuBtn.add(new Span(" " + userName));
+        boolean puedeConfigurar = user != null && user.getAuthorities().stream()
+                .anyMatch(authority -> "MENU_CONFIGURACION".equals(authority.getAuthority()));
+        if (puedeConfigurar) {
+            menuBtn.getSubMenu().addItem("Configuración", e -> UI.getCurrent().navigate(ConfiguracionView.class));
+        }
         menuBtn.getSubMenu().addItem("Cerrar Sesión", e -> {
             AuthService.logout();
             UI.getCurrent().getPage().setLocation("login");
@@ -91,6 +104,20 @@ public class MainLayout extends AppLayout {
         addToNavbar(false, header);
     }
 
+    private String obtenerLogoEmpresa(TenantUserDetails usuario) {
+        if (usuario != null) {
+            try {
+                String logoUrl = empresaService.buscar(usuario.getEmpresaId()).getLogoUrl();
+                if (logoUrl != null && !logoUrl.isBlank()) {
+                    return logoUrl;
+                }
+            } catch (IllegalArgumentException ignored) {
+                // Se muestran las iniciales del usuario si no se puede recuperar el logo.
+            }
+        }
+        return null;
+    }
+
     private void addDrawerContent() {
         // Brand Header
         Div logoIcon = new Div(VaadinIcon.HOSPITAL.create());
@@ -112,7 +139,7 @@ public class MainLayout extends AppLayout {
                 .set("font-weight", "800")
                 .set("color", "#1565D8");
 
-        Span brandSub = new Span("Medical Management");
+        Span brandSub = new Span("Gestión de citas");
         brandSub.getStyle()
                 .set("font-size", "0.6875rem")
                 .set("color", "#64748b")
@@ -128,7 +155,7 @@ public class MainLayout extends AppLayout {
     }
 
     private void addBodyFooter() {
-        Footer footer = new Footer(new Span("\u00a9 " + java.time.Year.now().getValue() + " CitaCloud · Gesti\u00f3n m\u00e9dica"));
+        Footer footer = new Footer(new Span("\u00a9 " + java.time.Year.now().getValue() + " CitaCloud · Gestión de citas"));
         footer.getStyle()
                 .set("position", "fixed")
                 .set("left", "var(--vaadin-app-layout-drawer-width, 0px)")
@@ -171,8 +198,11 @@ public class MainLayout extends AppLayout {
         nav.addItem(new SideNavItem("Seguros", SegurosView.class, VaadinIcon.SHIELD.create()));
         nav.addItem(new SideNavItem("Usuarios", UsuariosView.class, VaadinIcon.USER_CHECK.create()));
         nav.addItem(new SideNavItem("Roles", RolesView.class, VaadinIcon.KEY.create()));
-        nav.addItem(new SideNavItem("Configuración", ConfiguracionView.class, VaadinIcon.COG.create()));
-
+        SideNavItem empresas = new SideNavItem("Empresas", EmpresasView.class, VaadinIcon.BUILDING.create());
+        TenantUserDetails usuario = AuthService.getAuthenticatedUser();
+        empresas.setVisible(usuario != null && usuario.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_SUPERADMIN".equals(authority.getAuthority())));
+        nav.addItem(empresas);
         aplicarPermisosMenu(nav);
         return nav;
     }
@@ -184,10 +214,11 @@ public class MainLayout extends AppLayout {
         }
         String[] permisos = {"MENU_DASHBOARD", "MENU_MI_AGENDA", "MENU_CITAS", "MENU_PACIENTES", "MENU_MEDICOS",
                 "MENU_ESPECIALIDADES", "MENU_HORARIOS", "MENU_CONSULTORIOS", "MENU_SEGUROS",
-                "MENU_USUARIOS", "MENU_ROLES", "MENU_CONFIGURACION"};
+                "MENU_USUARIOS", "MENU_ROLES", null};
         var elementos = nav.getElement().getChildren().toList();
         for (int indice = 0; indice < elementos.size() && indice < permisos.length; indice++) {
             String permiso = permisos[indice];
+            if (permiso == null) continue;
             boolean permitido = usuario.getAuthorities().stream()
                     .anyMatch(authority -> permiso.equals(authority.getAuthority()));
             elementos.get(indice).setVisible(permitido);

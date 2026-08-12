@@ -29,13 +29,13 @@ public class LoginView extends VerticalLayout {
         this.authService = authService;
 
         setSizeFull();
-        setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        setJustifyContentMode(FlexComponent.JustifyContentMode.START);
         setAlignItems(FlexComponent.Alignment.CENTER);
         getStyle()
                 .set("background", "linear-gradient(135deg, #f0f4ff 0%, #e6eefc 100%)")
                 .set("box-sizing", "border-box")
                 .set("overflow-y", "auto")
-                .set("padding", "1.5rem");
+                .set("padding", "3.5rem 1.5rem 1.5rem");
 
         // Card Container
         VerticalLayout card = new VerticalLayout();
@@ -72,7 +72,7 @@ public class LoginView extends VerticalLayout {
                 .set("font-weight", "800")
                 .set("font-size", "1.75rem");
 
-        Paragraph subtitle = new Paragraph("Gestión médica avanzada");
+        Paragraph subtitle = new Paragraph("Gestión de citas avanzada");
         subtitle.getStyle()
                 .set("margin", "0 0 0.75rem 0")
                 .set("text-align", "center")
@@ -103,10 +103,9 @@ public class LoginView extends VerticalLayout {
 
         // Options Row
         Checkbox rememberCheck = new Checkbox("Recordar sesión");
-        Anchor forgotLink = new Anchor("#", "¿Olvidó su contraseña?");
-        forgotLink.getStyle().set("color", "#1565D8").set("font-size", "0.875rem").set("font-weight", "600");
 
-        HorizontalLayout optionsRow = new HorizontalLayout(rememberCheck, forgotLink);
+
+        HorizontalLayout optionsRow = new HorizontalLayout(rememberCheck);
         optionsRow.setWidthFull();
         optionsRow.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
         optionsRow.setAlignItems(FlexComponent.Alignment.CENTER);

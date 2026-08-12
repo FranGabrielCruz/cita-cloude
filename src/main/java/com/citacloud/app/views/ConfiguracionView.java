@@ -13,6 +13,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -21,6 +22,8 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
@@ -51,10 +54,14 @@ public class ConfiguracionView extends VerticalLayout {
 
         H2 titulo = new H2("Configuraci\u00f3n");
         titulo.getStyle().set("margin", "0").set("font-size", "1.5rem").set("font-weight", "800");
-        add(titulo, crearDatosInstitucion(), crearSucursales());
+        DatosInstitucion datosInstitucion = crearDatosInstitucion();
+        HorizontalLayout encabezado = new HorizontalLayout(titulo, datosInstitucion.guardar());
+        encabezado.setWidthFull(); encabezado.setAlignItems(FlexComponent.Alignment.CENTER);
+        encabezado.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+        add(encabezado, datosInstitucion.tarjeta(), crearSucursales());
     }
 
-    private VerticalLayout crearDatosInstitucion() {
+    private DatosInstitucion crearDatosInstitucion() {
         VerticalLayout tarjeta = tarjeta();
         H3 subtitulo = new H3("Datos de la Instituci\u00f3n");
         subtitulo.getStyle().set("margin", "0");
@@ -70,11 +77,12 @@ public class ConfiguracionView extends VerticalLayout {
         formulario.setColspan(nombre, 2);
         formulario.setColspan(direccion, 2);
 
+        Empresa empresaActual = null;
         if (empresaId != null) {
             try {
-                Empresa empresa = empresaService.buscar(empresaId);
-                nombre.setValue(valor(empresa.getNombre())); rnc.setValue(valor(empresa.getRncIdentificacion()));
-                telefono.setValue(valor(empresa.getTelefono())); correo.setValue(valor(empresa.getEmail())); direccion.setValue(valor(empresa.getDireccion()));
+                empresaActual = empresaService.buscar(empresaId);
+                nombre.setValue(valor(empresaActual.getNombre())); rnc.setValue(valor(empresaActual.getRncIdentificacion()));
+                telefono.setValue(valor(empresaActual.getTelefono())); correo.setValue(valor(empresaActual.getEmail())); direccion.setValue(valor(empresaActual.getDireccion()));
             } catch (IllegalArgumentException ignored) { }
         }
         Button guardar = botonIcono(VaadinIcon.DISC.create(), "Guardar", "#16a34a", "white");
@@ -85,10 +93,47 @@ public class ConfiguracionView extends VerticalLayout {
                 Notification.show("Datos guardados.", 3000, Notification.Position.BOTTOM_START);
             } catch (IllegalArgumentException ex) { Notification.show(ex.getMessage(), 4000, Notification.Position.MIDDLE); }
         });
-        HorizontalLayout acciones = new HorizontalLayout(guardar);
-        acciones.setWidthFull(); acciones.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        tarjeta.add(subtitulo, formulario, acciones);
-        return tarjeta;
+        tarjeta.add(subtitulo, formulario, crearCargaLogo(empresaActual));
+        return new DatosInstitucion(tarjeta, guardar);
+    }
+
+    private VerticalLayout crearCargaLogo(Empresa empresa) {
+        VerticalLayout seccion = new VerticalLayout();
+        seccion.setPadding(false); seccion.setSpacing(false);
+        seccion.getStyle().set("margin-top", "0.5rem");
+        H3 titulo = new H3("Logo de la institución");
+        titulo.getStyle().set("margin", "0 0 0.5rem 0").set("font-size", "1rem");
+
+        if (empresa != null && empresa.getLogoUrl() != null && !empresa.getLogoUrl().isBlank()) {
+            Image vistaPrevia = new Image(empresa.getLogoUrl(), "Logo de " + empresa.getNombre());
+            vistaPrevia.setWidth("96px"); vistaPrevia.setHeight("96px");
+            vistaPrevia.getStyle().set("object-fit", "contain").set("border", "1px solid #e2e8f0").set("border-radius", "10px").set("padding", "0.35rem");
+            seccion.add(titulo, vistaPrevia);
+        } else {
+            seccion.add(titulo);
+        }
+
+        MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
+        Upload carga = new Upload(buffer);
+        carga.setAcceptedFileTypes("image/png", "image/jpeg", "image/webp");
+        carga.setMaxFiles(1); carga.setMaxFileSize(2 * 1024 * 1024);
+        carga.setUploadButton(new Button("Seleccionar logo", VaadinIcon.UPLOAD.create()));
+        carga.setDropLabel(new Span("PNG, JPG o WEBP; máximo 2 MB"));
+        carga.setWidthFull();
+        carga.addSucceededListener(event -> {
+            try (var contenido = buffer.getInputStream(event.getFileName())) {
+                if (empresaId == null) throw new IllegalArgumentException("No se pudo identificar la institución.");
+                empresaService.guardarLogo(empresaId, contenido, event.getFileName(), event.getMIMEType());
+                Notification.show("Logo actualizado.", 3000, Notification.Position.BOTTOM_START);
+                getUI().ifPresent(ui -> ui.getPage().reload());
+            } catch (Exception ex) {
+                String mensaje = ex instanceof IllegalArgumentException ? ex.getMessage() : "No fue posible guardar el logo.";
+                Notification.show(mensaje, 4000, Notification.Position.MIDDLE);
+            }
+        });
+        carga.addFileRejectedListener(event -> Notification.show("El logo debe ser una imagen de hasta 2 MB.", 4000, Notification.Position.MIDDLE));
+        seccion.add(carga);
+        return seccion;
     }
 
     private VerticalLayout crearSucursales() {
@@ -148,4 +193,5 @@ public class ConfiguracionView extends VerticalLayout {
     private Button botonIcono(com.vaadin.flow.component.Component icono, String tooltip, String fondo, String color) { Button boton = new Button(icono); boton.setTooltipText(tooltip); boton.getStyle().set("background", fondo).set("color", color); return boton; }
     private String valor(String texto) { return texto == null ? "" : texto; }
     private String limpiar(String texto) { return texto == null || texto.isBlank() ? null : texto.trim(); }
+    private record DatosInstitucion(VerticalLayout tarjeta, Button guardar) { }
 }
