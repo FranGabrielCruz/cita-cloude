@@ -1,0 +1,109 @@
+name: Validar y desplegar en staging
+
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+
+concurrency:
+  group: staging-deployment
+  cancel-in-progress: true
+
+env:
+  # Debe ser una referencia en minúsculas. Se configura como variable del repositorio.
+  IMAGE_NAME: ${{ vars.GHCR_IMAGE }}
+  IMAGE_TAG: staging-${{ github.sha }}
+
+jobs:
+  test:
+    name: Pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Ejecutar pruebas
+        run: mvn -B verify
+
+  build:
+    name: Crear imagen
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ env.IMAGE_NAME }}
+      tag: ${{ env.IMAGE_TAG }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Comprobar configuración de la imagen
+        run: test -n "$IMAGE_NAME"
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+  deploy:
+    name: Desplegar
+    needs: build
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      STAGING_HOST: ${{ secrets.STAGING_HOST }}
+      STAGING_USER: ${{ secrets.STAGING_USER }}
+      STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+      STAGING_KNOWN_HOSTS: ${{ secrets.STAGING_KNOWN_HOSTS }}
+      STAGING_GHCR_USERNAME: ${{ secrets.STAGING_GHCR_USERNAME }}
+      STAGING_GHCR_TOKEN: ${{ secrets.STAGING_GHCR_TOKEN }}
+      DB_URL: ${{ secrets.STAGING_DB_URL }}
+      DB_USERNAME: ${{ secrets.STAGING_DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Comprobar secretos necesarios
+        run: |
+          test -n "$STAGING_HOST"
+          test -n "$STAGING_USER"
+          test -n "$STAGING_SSH_KEY"
+          test -n "$STAGING_KNOWN_HOSTS"
+          test -n "$STAGING_GHCR_USERNAME"
+          test -n "$STAGING_GHCR_TOKEN"
+          test -n "$DB_URL"
+          test -n "$DB_USERNAME"
+          test -n "$DB_PASSWORD"
+      - name: Configurar acceso seguro al servidor
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$STAGING_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$STAGING_KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Preparar configuración privada de staging
+        run: |
+          {
+            printf 'IMAGE_NAME=%s\n' '${{ needs.build.outputs.image }}'
+            printf 'IMAGE_TAG=%s\n' '${{ needs.build.outputs.tag }}'
+            printf 'APP_PORT=8080\n'
+            printf 'DB_URL=%s\n' "$DB_URL"
+            printf 'DB_USERNAME=%s\n' "$DB_USERNAME"
+            printf 'DB_PASSWORD=%s\n' "$DB_PASSWORD"
+          } > .staging.env
+          chmod 600 .staging.env
+      - name: Copiar definición de despliegue
+        run: |
+          ssh -i ~/.ssh/id_ed25519 "$STAGING_USER@$STAGING_HOST" 'mkdir -p ~/citacloud-staging'
+          scp -i ~/.ssh/id_ed25519 docker-compose.staging.yml .staging.env "$STAGING_USER@$STAGING_HOST:~/citacloud-staging/"
+      - name: Actualizar el servicio de staging
+        run: |
+          printf '%s' "$STAGING_GHCR_TOKEN" | ssh -i ~/.ssh/id_ed25519 "$STAGING_USER@$STAGING_HOST" "docker login ghcr.io -u '$STAGING_GHCR_USERNAME' --password-stdin && cd ~/citacloud-staging && mv .staging.env .env && chmod 600 .env && docker compose --env-file .env -f docker-compose.staging.yml up -d --pull always"
+      - name: Verificar que la aplicación responde
+        run: ssh -i ~/.ssh/id_ed25519 "$STAGING_USER@$STAGING_HOST" 'curl --fail --retry 12 --retry-delay 5 http://127.0.0.1:8080/login > /dev/null'

@@ -6,6 +6,7 @@ import com.citacloud.app.security.AuthService;
 import com.citacloud.app.security.TenantUserDetails;
 import com.citacloud.app.services.ConsultorioService;
 import com.citacloud.app.services.SucursalService;
+import com.citacloud.app.views.components.PaginadorTabla;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -37,6 +38,7 @@ public class ConsultoriosView extends VerticalLayout {
     private final SucursalService sucursalService;
     private final UUID empresaId;
     private final Grid<Consultorio> grid = new Grid<>(Consultorio.class, false);
+    private final PaginadorTabla<Consultorio> paginador = new PaginadorTabla<>(grid);
     private final TextField codigoFiltro = new TextField("C\u00f3digo");
     private final TextField nombreFiltro = new TextField("Nombre");
     private final ComboBox<Sucursal> sucursalFiltro = new ComboBox<>("Sucursal");
@@ -53,7 +55,7 @@ public class ConsultoriosView extends VerticalLayout {
         setSpacing(true);
         configurarFiltros();
         configurarTabla();
-        add(crearEncabezado(), crearBarraFiltros(), grid);
+        add(crearEncabezado(), crearBarraFiltros(), grid, paginador);
         actualizarConsultorios();
     }
 
@@ -126,12 +128,12 @@ public class ConsultoriosView extends VerticalLayout {
 
     private void actualizarConsultorios() {
         if (empresaId == null) {
-            grid.setItems(List.of());
+            paginador.setItems(List.of());
             return;
         }
         Boolean activo = "Activo".equals(estadoFiltro.getValue()) ? Boolean.TRUE
                 : "Inactivo".equals(estadoFiltro.getValue()) ? Boolean.FALSE : null;
-        grid.setItems(consultorioService.buscar(empresaId, codigoFiltro.getValue(), nombreFiltro.getValue(),
+        paginador.setItems(consultorioService.buscar(empresaId, codigoFiltro.getValue(), nombreFiltro.getValue(),
                 sucursalFiltro.getValue() == null ? null : sucursalFiltro.getValue().getId(), activo));
     }
 

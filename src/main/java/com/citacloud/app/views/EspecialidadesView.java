@@ -4,6 +4,7 @@ import com.citacloud.app.models.Especialidad;
 import com.citacloud.app.security.AuthService;
 import com.citacloud.app.security.TenantUserDetails;
 import com.citacloud.app.services.EspecialidadService;
+import com.citacloud.app.views.components.PaginadorTabla;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -33,6 +34,7 @@ public class EspecialidadesView extends VerticalLayout {
     private final EspecialidadService especialidadService;
     private final UUID empresaId;
     private final Grid<Especialidad> grid = new Grid<>(Especialidad.class, false);
+    private final PaginadorTabla<Especialidad> paginador = new PaginadorTabla<>(grid);
     private final TextField nombreFiltro = new TextField("Nombre");
 
     public EspecialidadesView(EspecialidadService especialidadService) {
@@ -45,7 +47,7 @@ public class EspecialidadesView extends VerticalLayout {
         nombreFiltro.setPlaceholder("Buscar por nombre");
         nombreFiltro.setPrefixComponent(VaadinIcon.SEARCH.create());
         configurarTabla();
-        add(crearEncabezado(), crearBarraFiltros(), grid);
+        add(crearEncabezado(), crearBarraFiltros(), grid, paginador);
         actualizarEspecialidades();
     }
 
@@ -102,7 +104,7 @@ public class EspecialidadesView extends VerticalLayout {
     }
 
     private void actualizarEspecialidades() {
-        grid.setItems(empresaId == null ? List.of() : especialidadService.buscar(empresaId, nombreFiltro.getValue()));
+        paginador.setItems(empresaId == null ? List.of() : especialidadService.buscar(empresaId, nombreFiltro.getValue()));
     }
 
     private void abrirFormulario(Especialidad especialidadExistente) {

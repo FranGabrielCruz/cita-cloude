@@ -24,6 +24,9 @@ types.d.ts
 application-local.properties
 application-dev.properties
 
+# Logos y otros archivos cargados en ejecución
+uploads/
+
 # IDEs
 .idea/
 *.iml

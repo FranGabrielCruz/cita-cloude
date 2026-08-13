@@ -4,6 +4,7 @@ import com.citacloud.app.models.Empresa;
 import com.citacloud.app.models.Usuario;
 import com.citacloud.app.security.AuthService;
 import com.citacloud.app.services.EmpresaAdministracionService;
+import com.citacloud.app.views.components.PaginadorTabla;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -34,6 +35,7 @@ import jakarta.annotation.security.PermitAll;
 public class EmpresasView extends VerticalLayout implements BeforeEnterObserver {
     private final EmpresaAdministracionService empresaService;
     private final Grid<Empresa> empresas = new Grid<>(Empresa.class, false);
+    private final PaginadorTabla<Empresa> paginador = new PaginadorTabla<>(empresas);
     private final TextField codigoFiltro = new TextField("C\u00f3digo");
     private final TextField nombreFiltro = new TextField("Nombre");
     private final ComboBox<String> estadoFiltro = new ComboBox<>("Estado");
@@ -63,7 +65,7 @@ public class EmpresasView extends VerticalLayout implements BeforeEnterObserver 
         empresas.addColumn(Empresa::getNombre).setHeader("NOMBRE"); empresas.addColumn(Empresa::getTelefono).setHeader("TEL\u00c9FONO"); empresas.addColumn(Empresa::getEmail).setHeader("CORREO");
         empresas.addComponentColumn(empresa -> estado(empresa.getActiva())).setHeader("ESTADO").setWidth("130px").setFlexGrow(0);
         empresas.addComponentColumn(empresa -> { Button editar = new Button(VaadinIcon.EDIT.create(), e -> abrirEmpresa(empresa)); editar.setTooltipText("Editar"); editar.addThemeVariants(ButtonVariant.LUMO_TERTIARY); return editar; }).setHeader("ACCIONES").setWidth("110px").setFlexGrow(0);
-        empresas.setWidthFull(); empresas.setAllRowsVisible(true); return tarjeta(new H3("Empresas"), empresas);
+        empresas.setWidthFull(); empresas.setAllRowsVisible(true); return tarjeta(new H3("Empresas"), empresas, paginador);
     }
 
     private void abrirEmpresa(Empresa existente) {
@@ -125,7 +127,7 @@ public class EmpresasView extends VerticalLayout implements BeforeEnterObserver 
         Button cerrar = boton(VaadinIcon.CLOSE.create(), "Cerrar", "#e2e8f0", "#1e293b"); cerrar.addClickListener(e -> dialogo.close()); dialogo.add(formulario); dialogo.getFooter().add(guardar, cerrar); dialogo.open();
     }
 
-    private void cargar() { Boolean activa = null; if ("Activas".equals(estadoFiltro.getValue())) activa = Boolean.TRUE; if ("Inactivas".equals(estadoFiltro.getValue())) activa = Boolean.FALSE; empresas.setItems(empresaService.buscar(codigoFiltro.getValue(), nombreFiltro.getValue(), activa)); }
+    private void cargar() { Boolean activa = null; if ("Activas".equals(estadoFiltro.getValue())) activa = Boolean.TRUE; if ("Inactivas".equals(estadoFiltro.getValue())) activa = Boolean.FALSE; paginador.setItems(empresaService.buscar(codigoFiltro.getValue(), nombreFiltro.getValue(), activa)); }
     private boolean esSuperadmin() { var usuario = AuthService.getAuthenticatedUser(); return usuario != null && usuario.getAuthorities().stream().anyMatch(a -> "ROLE_SUPERADMIN".equals(a.getAuthority())); }
     private VerticalLayout tarjeta(Component... contenido) { VerticalLayout tarjeta = new VerticalLayout(contenido); tarjeta.setWidthFull(); tarjeta.getStyle().set("background","white").set("border","1px solid #e2e8f0").set("border-radius","12px").set("padding","1.5rem"); return tarjeta; }
     private Button boton(Component icono,String ayuda,String fondo,String color) { Button boton = new Button(icono); boton.setTooltipText(ayuda); boton.getStyle().set("background",fondo).set("color",color); return boton; }

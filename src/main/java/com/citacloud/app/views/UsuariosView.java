@@ -5,6 +5,7 @@ import com.citacloud.app.models.Usuario;
 import com.citacloud.app.security.AuthService;
 import com.citacloud.app.security.TenantUserDetails;
 import com.citacloud.app.services.UsuarioService;
+import com.citacloud.app.views.components.PaginadorTabla;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -38,6 +39,7 @@ public class UsuariosView extends VerticalLayout {
     private final UsuarioService usuarioService;
     private final UUID empresaId;
     private final Grid<Usuario> grid = new Grid<>(Usuario.class, false);
+    private final PaginadorTabla<Usuario> paginador = new PaginadorTabla<>(grid);
     private final TextField usuarioFiltro = new TextField("Usuario");
     private final TextField nombreFiltro = new TextField("Nombre");
     private final ComboBox<Rol> rolFiltro = new ComboBox<>("Rol");
@@ -52,7 +54,7 @@ public class UsuariosView extends VerticalLayout {
         setSpacing(true);
         configurarFiltros();
         configurarTabla();
-        add(crearEncabezado(), crearFiltros(), grid);
+        add(crearEncabezado(), crearFiltros(), grid, paginador);
         actualizarUsuarios();
     }
 
@@ -102,9 +104,9 @@ public class UsuariosView extends VerticalLayout {
     }
 
     private void actualizarUsuarios() {
-        if (empresaId == null) { grid.setItems(List.of()); return; }
+        if (empresaId == null) { paginador.setItems(List.of()); return; }
         Boolean activo = "Activo".equals(estadoFiltro.getValue()) ? Boolean.TRUE : "Inactivo".equals(estadoFiltro.getValue()) ? Boolean.FALSE : null;
-        grid.setItems(usuarioService.buscar(empresaId, usuarioFiltro.getValue(), nombreFiltro.getValue(), rolFiltro.getValue() == null ? null : rolFiltro.getValue().getId(), activo));
+        paginador.setItems(usuarioService.buscar(empresaId, usuarioFiltro.getValue(), nombreFiltro.getValue(), rolFiltro.getValue() == null ? null : rolFiltro.getValue().getId(), activo));
     }
 
     private void limpiarFiltros() { usuarioFiltro.clear(); nombreFiltro.clear(); rolFiltro.clear(); estadoFiltro.clear(); actualizarUsuarios(); }

@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: cita-cloud
+  profiles:
+    # Facilita la ejecución desde IntelliJ. Staging y producción siguen siendo explícitos.
+    default: local
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+
+server:
+  servlet:
+    session:
+      timeout: 15m
+
+vaadin:
+  launch-browser: false
+  whitelisted-packages: com.citacloud.app
+
+app:
+  upload-dir: uploads

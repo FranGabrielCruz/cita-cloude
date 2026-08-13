@@ -4,6 +4,7 @@ import com.citacloud.app.models.Aseguradora;
 import com.citacloud.app.security.AuthService;
 import com.citacloud.app.security.TenantUserDetails;
 import com.citacloud.app.services.AseguradoraService;
+import com.citacloud.app.views.components.PaginadorTabla;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -33,6 +34,7 @@ public class SegurosView extends VerticalLayout {
     private final AseguradoraService aseguradoraService;
     private final UUID empresaId;
     private final Grid<Aseguradora> grid = new Grid<>(Aseguradora.class, false);
+    private final PaginadorTabla<Aseguradora> paginador = new PaginadorTabla<>(grid);
     private final TextField nombreFiltro = new TextField("Nombre");
     private final ComboBox<String> estadoFiltro = new ComboBox<>("Estado");
 
@@ -46,7 +48,7 @@ public class SegurosView extends VerticalLayout {
         setSpacing(true);
         configurarFiltros();
         configurarTabla();
-        add(crearEncabezado(), crearBarraFiltros(), grid);
+        add(crearEncabezado(), crearBarraFiltros(), grid, paginador);
         actualizarAseguradoras();
     }
 
@@ -108,12 +110,12 @@ public class SegurosView extends VerticalLayout {
 
     private void actualizarAseguradoras() {
         if (empresaId == null) {
-            grid.setItems(List.of());
+            paginador.setItems(List.of());
             return;
         }
         Boolean activa = "Activo".equals(estadoFiltro.getValue()) ? Boolean.TRUE
                 : "Inactivo".equals(estadoFiltro.getValue()) ? Boolean.FALSE : null;
-        grid.setItems(aseguradoraService.buscar(empresaId, nombreFiltro.getValue(), activa));
+        paginador.setItems(aseguradoraService.buscar(empresaId, nombreFiltro.getValue(), activa));
     }
 
     private void limpiarFiltros() {

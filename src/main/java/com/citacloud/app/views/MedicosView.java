@@ -10,6 +10,7 @@ import com.citacloud.app.services.EspecialidadService;
 import com.citacloud.app.services.MedicoService;
 import com.citacloud.app.services.SucursalService;
 import com.citacloud.app.repositories.RolRepository;
+import com.citacloud.app.views.components.PaginadorTabla;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -47,6 +48,7 @@ public class MedicosView extends VerticalLayout {
     private final RolRepository rolRepository;
     private final UUID empresaId;
     private final Grid<Medico> grid = new Grid<>(Medico.class, false);
+    private final PaginadorTabla<Medico> paginador = new PaginadorTabla<>(grid);
     private final TextField codigoFiltro = new TextField("C\u00f3digo");
     private final TextField nombreFiltro = new TextField("Nombre");
     private final ComboBox<Especialidad> especialidadFiltro = new ComboBox<>("Especialidad");
@@ -65,7 +67,7 @@ public class MedicosView extends VerticalLayout {
         setSpacing(true);
         configurarFiltros();
         configurarTabla();
-        add(crearEncabezado(), crearBarraFiltros(), grid);
+        add(crearEncabezado(), crearBarraFiltros(), grid, paginador);
         actualizarMedicos();
     }
 
@@ -137,11 +139,11 @@ public class MedicosView extends VerticalLayout {
 
     private void actualizarMedicos() {
         if (empresaId == null) {
-            grid.setItems(List.of());
+            paginador.setItems(List.of());
             return;
         }
         Especialidad especialidad = especialidadFiltro.getValue();
-        grid.setItems(medicoService.buscar(empresaId, codigoFiltro.getValue(), nombreFiltro.getValue(),
+        paginador.setItems(medicoService.buscar(empresaId, codigoFiltro.getValue(), nombreFiltro.getValue(),
                 especialidad == null ? null : especialidad.getId()));
     }
 

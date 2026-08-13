@@ -12,6 +12,7 @@ import com.citacloud.app.services.ConsultorioService;
 import com.citacloud.app.services.MedicoService;
 import com.citacloud.app.services.PacienteService;
 import com.citacloud.app.services.SucursalService;
+import com.citacloud.app.views.components.PaginadorTabla;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.UI;
@@ -52,6 +53,7 @@ public class CitasView extends VerticalLayout {
     private final ConsultorioService consultorioService;
     private final UUID empresaId;
     private final Grid<Cita> grid = new Grid<>(Cita.class, false);
+    private final PaginadorTabla<Cita> paginador = new PaginadorTabla<>(grid);
     private final ComboBox<Paciente> pacienteFiltro = new ComboBox<>("Paciente");
     private final ComboBox<Medico> medicoFiltro = new ComboBox<>("Medico");
     private final ComboBox<Sucursal> sucursalFiltro = new ComboBox<>("Sucursal");
@@ -75,7 +77,7 @@ public class CitasView extends VerticalLayout {
         configurarEncabezado();
         configurarFiltros();
         configurarTabla();
-        add(crearEncabezado(), crearBarraFiltros(), grid);
+        add(crearEncabezado(), crearBarraFiltros(), grid, paginador);
         actualizarCitas();
     }
 
@@ -192,7 +194,7 @@ public class CitasView extends VerticalLayout {
 
     private void actualizarCitas() {
         if (empresaId == null) {
-            grid.setItems(List.of());
+            paginador.setItems(List.of());
             return;
         }
         List<Cita> citas = citaService.listarPorEmpresa(empresaId).stream()
@@ -203,7 +205,7 @@ public class CitasView extends VerticalLayout {
                         && c.getConsultorio().getId().equals(consultorioFiltro.getValue().getId())))
                 .filter(c -> "Todos".equals(estadoFiltro.getValue()) || estadoFiltro.getValue().equals(c.getEstado()))
                 .toList();
-        grid.setItems(citas);
+        paginador.setItems(citas);
     }
 
     private void abrirFormulario(Cita citaExistente) {

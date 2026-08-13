@@ -97,7 +97,6 @@ public class LoginView extends VerticalLayout {
         PasswordField passwordField = new PasswordField("Contraseña");
         passwordField.setPlaceholder("••••••••");
         passwordField.setPrefixComponent(VaadinIcon.LOCK.create());
-        passwordField.setValue("admin123");
         passwordField.setWidthFull();
         passwordField.getStyle().set("margin-bottom", "0.75rem");
 

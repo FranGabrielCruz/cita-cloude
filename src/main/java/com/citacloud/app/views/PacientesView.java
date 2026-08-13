@@ -7,6 +7,7 @@ import com.citacloud.app.security.TenantUserDetails;
 import com.citacloud.app.services.PacienteService;
 import com.citacloud.app.services.AseguradoraService;
 import com.citacloud.app.services.SeguroPacienteService;
+import com.citacloud.app.views.components.PaginadorTabla;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.CssImport;
@@ -40,6 +41,7 @@ public class PacientesView extends VerticalLayout {
     private final AseguradoraService aseguradoraService;
     private final SeguroPacienteService seguroPacienteService;
     private final Grid<Paciente> grid = new Grid<>(Paciente.class, false);
+    private final PaginadorTabla<Paciente> paginador = new PaginadorTabla<>(grid);
 
     public PacientesView(PacienteService pacienteService, AseguradoraService aseguradoraService,
                          SeguroPacienteService seguroPacienteService) {
@@ -100,9 +102,9 @@ public class PacientesView extends VerticalLayout {
 
         configurarTabla(empresaId);
         if (empresaId != null) {
-            grid.setItems(pacienteService.listarPorEmpresa(empresaId));
+            paginador.setItems(pacienteService.listarPorEmpresa(empresaId));
         }
-        add(encabezado, filtros, grid);
+        add(encabezado, filtros, grid, paginador);
     }
 
     private void configurarTabla(UUID empresaId) {
@@ -127,7 +129,7 @@ public class PacientesView extends VerticalLayout {
 
     private void actualizarBusqueda(UUID empresaId, String termino) {
         if (empresaId != null) {
-            grid.setItems(pacienteService.buscar(empresaId, termino));
+            paginador.setItems(pacienteService.buscar(empresaId, termino));
         }
     }
 

@@ -1,0 +1,14 @@
+.git
+.github
+.idea
+.m2
+.vaadin
+node_modules
+target
+uploads
+.env
+.env.*
+!.env.example
+*.log
+*.iml
+
