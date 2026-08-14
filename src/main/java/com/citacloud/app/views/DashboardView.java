@@ -39,6 +39,7 @@ public class DashboardView extends VerticalLayout {
         setWidthFull();
         setPadding(true);
         setSpacing(true);
+        addClassName("dashboard-view");
         getStyle().set("background-color", "#f8fafc");
 
         TenantUserDetails user = AuthService.getAuthenticatedUser();
@@ -117,6 +118,7 @@ public class DashboardView extends VerticalLayout {
 
         leftCol.add(tableTitle, grid);
         leftCol.addClassName("dashboard-left");
+        leftCol.addClassName("dashboard-card");
         leftCol.setWidth("65%");
 
         // Right Column: Breakdown & Agenda Timeline Cards
@@ -127,6 +129,7 @@ public class DashboardView extends VerticalLayout {
 
         // Card 1: Citas por Estado
         VerticalLayout chartCard = new VerticalLayout();
+        chartCard.addClassName("dashboard-card");
         chartCard.getStyle()
                 .set("background-color", "#ffffff")
                 .set("border-radius", "12px")
@@ -138,13 +141,16 @@ public class DashboardView extends VerticalLayout {
         chartTitle.getStyle().set("margin", "0 0 1rem 0").set("font-size", "1.125rem");
 
         Div summaryBox = new Div();
+        summaryBox.addClassName("dashboard-summary");
         summaryBox.getStyle().set("text-align", "center").set("padding", "1rem").set("background-color", "#f8fafc").set("border-radius", "8px");
         DashboardService.ResumenEstadosHoy resumenHoy = empresaId == null
                 ? new DashboardService.ResumenEstadosHoy(0, 0, 0, 0, 0, 0, 0, 0, 0)
                 : dashboardService.getResumenEstadosHoy(empresaId);
         H2 totalNum = new H2(String.valueOf(resumenHoy.total()));
+        totalNum.addClassName("dashboard-summary-total");
         totalNum.getStyle().set("margin", "0").set("color", "#1565D8");
         Span totalLabel = new Span("Total Citas");
+        totalLabel.addClassName("dashboard-summary-label");
         totalLabel.getStyle().set("font-size", "0.8125rem").set("color", "#64748b");
         summaryBox.add(totalNum, totalLabel);
 
@@ -163,6 +169,7 @@ public class DashboardView extends VerticalLayout {
 
         // Card 2: Agenda del Día Timeline
         VerticalLayout timelineCard = new VerticalLayout();
+        timelineCard.addClassName("dashboard-card");
         timelineCard.getStyle()
                 .set("background-color", "#ffffff")
                 .set("border-radius", "12px")

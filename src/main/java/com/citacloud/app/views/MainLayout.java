@@ -3,6 +3,7 @@ package com.citacloud.app.views;
 import com.citacloud.app.security.AuthService;
 import com.citacloud.app.security.TenantUserDetails;
 import com.citacloud.app.services.EmpresaService;
+import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.HasElement;
 import com.vaadin.flow.component.applayout.AppLayout;
@@ -21,15 +22,20 @@ import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
+import com.vaadin.flow.server.VaadinSession;
+import com.vaadin.flow.theme.lumo.Lumo;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 
 public class MainLayout extends AppLayout {
 
     private static final String ESPACIO_FOOTER = "3.75rem";
+    private static final String MODO_OSCURO = "citacloud.modoOscuro";
     private final EmpresaService empresaService;
 
     public MainLayout(EmpresaService empresaService) {
         this.empresaService = empresaService;
+        aplicarModoOscuroGuardado();
+        getElement().executeJs("const oscuro = localStorage.getItem('citacloud.modoOscuro') === 'true'; this.$server.sincronizarModoOscuro(oscuro);");
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
         addHeaderContent();
@@ -54,9 +60,17 @@ public class MainLayout extends AppLayout {
 
         TenantUserDetails user = AuthService.getAuthenticatedUser();
         String userName = (user != null) ? user.getNombreCompleto() : "Usuario";
-        String empresaNombre = (user != null) ? user.getEmpresaNombre() : "CitaCloud";
+        String empresaNombre = user != null ? user.getEmpresaNombre() : null;
+        if (empresaNombre == null || empresaNombre.isBlank()) {
+            try {
+                empresaNombre = user == null ? "CitaCloud" : empresaService.buscar(user.getEmpresaId()).getNombre();
+            } catch (IllegalArgumentException ignored) {
+                empresaNombre = "CitaCloud";
+            }
+        }
 
         RouterLink empresaActual = new RouterLink(empresaNombre, DashboardView.class);
+        empresaActual.addClassName("empresa-actual");
         empresaActual.getStyle()
                 .set("font-weight", "600")
                 .set("color", "#1e293b")
@@ -76,6 +90,8 @@ public class MainLayout extends AppLayout {
 
         var menuBtn = userMenu.addItem(avatar);
         menuBtn.add(new Span(" " + userName));
+        var modoOscuro = menuBtn.getSubMenu().addItem(etiquetaModoOscuro(), e -> cambiarModoOscuro());
+        modoOscuro.setId("modo-oscuro");
         boolean puedeConfigurar = user != null && user.getAuthorities().stream()
                 .anyMatch(authority -> "MENU_CONFIGURACION".equals(authority.getAuthority()));
         if (puedeConfigurar) {
@@ -102,6 +118,44 @@ public class MainLayout extends AppLayout {
 
         // En pantallas t\u00e1ctiles el encabezado debe mantenerse arriba, no al pie.
         addToNavbar(false, header);
+    }
+
+    private void cambiarModoOscuro() {
+        boolean oscuro = !modoOscuroActivo();
+        VaadinSession.getCurrent().setAttribute(MODO_OSCURO, oscuro);
+        aplicarTema(oscuro);
+        getElement().executeJs("localStorage.setItem('citacloud.modoOscuro', $0); window.location.reload();", oscuro);
+    }
+
+    @ClientCallable
+    public void sincronizarModoOscuro(boolean oscuro) {
+        if (modoOscuroActivo() != oscuro) {
+            VaadinSession.getCurrent().setAttribute(MODO_OSCURO, oscuro);
+            aplicarTema(oscuro);
+        }
+    }
+
+    private void aplicarModoOscuroGuardado() {
+        aplicarTema(modoOscuroActivo());
+    }
+
+    private boolean modoOscuroActivo() {
+        Object oscuro = VaadinSession.getCurrent().getAttribute(MODO_OSCURO);
+        return Boolean.TRUE.equals(oscuro);
+    }
+
+    private void aplicarTema(boolean oscuro) {
+        if (oscuro) {
+            UI.getCurrent().getElement().getThemeList().add(Lumo.DARK);
+            UI.getCurrent().getElement().getClassList().add("modo-oscuro");
+        } else {
+            UI.getCurrent().getElement().getThemeList().remove(Lumo.DARK);
+            UI.getCurrent().getElement().getClassList().remove("modo-oscuro");
+        }
+    }
+
+    private String etiquetaModoOscuro() {
+        return modoOscuroActivo() ? "Usar modo claro" : "Usar modo oscuro";
     }
 
     private String obtenerLogoEmpresa(TenantUserDetails usuario) {
@@ -156,6 +210,7 @@ public class MainLayout extends AppLayout {
 
     private void addBodyFooter() {
         Footer footer = new Footer(new Span("\u00a9 " + java.time.Year.now().getValue() + " CitaCloud · Gestión de citas"));
+        footer.addClassName("citacloud-footer");
         footer.getStyle()
                 .set("position", "fixed")
                 .set("left", "var(--vaadin-app-layout-drawer-width, 0px)")

@@ -17,6 +17,188 @@
   --lumo-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+:root[theme~="dark"], body[theme~="dark"] {
+  --citacloud-bg: #0f172a;
+  --citacloud-surface: #1e293b;
+  --citacloud-text: #e2e8f0;
+  --citacloud-text-secondary: #94a3b8;
+  --citacloud-border: #334155;
+  --citacloud-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+}
+
+:root[theme~="dark"] body, body[theme~="dark"] {
+  background-color: var(--citacloud-bg);
+}
+
+:root[theme~="dark"] vaadin-app-layout::part(navbar),
+body[theme~="dark"] vaadin-app-layout::part(navbar),
+:root[theme~="dark"] vaadin-app-layout::part(drawer),
+body[theme~="dark"] vaadin-app-layout::part(drawer),
+:root[theme~="dark"] vaadin-grid,
+body[theme~="dark"] vaadin-grid,
+:root[theme~="dark"] vaadin-dialog-overlay::part(overlay),
+body[theme~="dark"] vaadin-dialog-overlay::part(overlay) {
+  background-color: var(--citacloud-surface);
+}
+
+/* Elementos que antes usaban fondos claros fijos.
+ * Vaadin coloca el tema en <html>, por eso los selectores deben partir de
+ * html y no solamente de body. */
+:root[theme~="dark"] body,
+:root[theme~="dark"] vaadin-app-layout::part(content) {
+  background-color: var(--citacloud-bg);
+  color: var(--citacloud-text);
+}
+
+:root[theme~="dark"] vaadin-vertical-layout[style*="background"],
+:root[theme~="dark"] vaadin-horizontal-layout[style*="background"],
+:root[theme~="dark"] .mobile-stacked-filters,
+:root[theme~="dark"] .paginador-tabla,
+:root[theme~="dark"] .citacloud-footer {
+  background-color: var(--citacloud-surface) !important;
+  border-color: var(--citacloud-border) !important;
+  color: var(--citacloud-text) !important;
+}
+
+:root[theme~="dark"] .dashboard-view {
+  background-color: var(--citacloud-bg) !important;
+  color: var(--citacloud-text) !important;
+}
+
+:root[theme~="dark"] .dashboard-card,
+:root[theme~="dark"] .metric-card,
+:root[theme~="dark"] .horarios-semanal {
+  background-color: var(--citacloud-surface) !important;
+  border-color: var(--citacloud-border) !important;
+}
+
+:root[theme~="dark"] h1,
+:root[theme~="dark"] h2,
+:root[theme~="dark"] h3,
+:root[theme~="dark"] h4,
+:root[theme~="dark"] h5,
+:root[theme~="dark"] h6,
+:root[theme~="dark"] .horarios-semanal,
+:root[theme~="dark"] .horarios-semanal vaadin-button {
+  color: var(--citacloud-text) !important;
+}
+
+:root[theme~="dark"] .dashboard-view .metric-label,
+:root[theme~="dark"] .dashboard-view .metric-value,
+:root[theme~="dark"] .paginador-tabla span,
+:root[theme~="dark"] .citacloud-footer {
+  color: var(--citacloud-text-secondary) !important;
+}
+
+/* Campos Vaadin dentro de los filtros: fondo oscuro y texto legible. */
+:root[theme~="dark"] vaadin-text-field,
+:root[theme~="dark"] vaadin-combo-box,
+:root[theme~="dark"] vaadin-date-picker,
+:root[theme~="dark"] vaadin-time-picker,
+:root[theme~="dark"] vaadin-select {
+  --lumo-base-color: #1e293b;
+  --lumo-body-text-color: #e2e8f0;
+  --lumo-secondary-text-color: #cbd5e1;
+  --lumo-contrast-10pct: #334155;
+  --lumo-contrast-20pct: #475569;
+}
+
+:root[theme~="dark"] vaadin-text-field::part(label),
+:root[theme~="dark"] vaadin-combo-box::part(label),
+:root[theme~="dark"] vaadin-date-picker::part(label),
+:root[theme~="dark"] vaadin-time-picker::part(label),
+:root[theme~="dark"] vaadin-select::part(label) {
+  color: #e2e8f0;
+}
+
+:root[theme~="dark"] vaadin-text-field::part(input-field),
+:root[theme~="dark"] vaadin-combo-box::part(input-field),
+:root[theme~="dark"] vaadin-date-picker::part(input-field),
+:root[theme~="dark"] vaadin-time-picker::part(input-field),
+:root[theme~="dark"] vaadin-select::part(input-field) {
+  background-color: #334155;
+  color: #f8fafc;
+}
+
+:root[theme~="dark"] vaadin-text-field::part(input),
+:root[theme~="dark"] vaadin-combo-box::part(input),
+:root[theme~="dark"] vaadin-date-picker::part(input),
+:root[theme~="dark"] vaadin-time-picker::part(input),
+:root[theme~="dark"] vaadin-select::part(value) {
+  color: #f8fafc;
+}
+
+:root[theme~="dark"] .empresa-actual {
+  color: #f8fafc !important;
+}
+
+/* Marcador propio aplicado por MainLayout. Evita depender de dónde Vaadin
+ * coloque el atributo theme y cubre los fondos fijados desde las vistas. */
+.modo-oscuro .empresa-actual {
+  color: #f8fafc !important;
+}
+
+.modo-oscuro vaadin-vertical-layout[style*="background"],
+.modo-oscuro vaadin-horizontal-layout[style*="background"],
+.modo-oscuro .mobile-stacked-filters,
+.modo-oscuro .paginador-tabla,
+.modo-oscuro .citacloud-footer,
+.modo-oscuro .dashboard-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+.modo-oscuro .dashboard-view {
+  background-color: #0f172a !important;
+  color: #e2e8f0 !important;
+}
+
+.modo-oscuro .dashboard-view h1,
+.modo-oscuro .dashboard-view h2,
+.modo-oscuro .dashboard-view h3,
+.modo-oscuro .dashboard-view h4,
+.modo-oscuro .dashboard-view p,
+.modo-oscuro .dashboard-view li,
+.modo-oscuro .dashboard-view span:not(.badge-confirmada):not(.badge-pendiente):not(.badge-cancelada):not(.badge-atendida) {
+  color: #e2e8f0 !important;
+}
+
+.modo-oscuro .metric-label,
+.modo-oscuro .citacloud-footer,
+.modo-oscuro .paginador-tabla span {
+  color: #cbd5e1 !important;
+}
+
+.modo-oscuro vaadin-text-field,
+.modo-oscuro vaadin-combo-box,
+.modo-oscuro vaadin-date-picker,
+.modo-oscuro vaadin-time-picker,
+.modo-oscuro vaadin-select {
+  --lumo-base-color: #1e293b;
+  --lumo-body-text-color: #e2e8f0;
+  --lumo-secondary-text-color: #cbd5e1;
+  --lumo-contrast-10pct: #334155;
+  --lumo-contrast-20pct: #475569;
+}
+
+.modo-oscuro vaadin-text-field::part(label),
+.modo-oscuro vaadin-combo-box::part(label),
+.modo-oscuro vaadin-date-picker::part(label),
+.modo-oscuro vaadin-time-picker::part(label),
+.modo-oscuro vaadin-select::part(label) {
+  color: #e2e8f0;
+}
+
+.modo-oscuro vaadin-text-field::part(input-field),
+.modo-oscuro vaadin-combo-box::part(input-field),
+.modo-oscuro vaadin-date-picker::part(input-field),
+.modo-oscuro vaadin-time-picker::part(input-field),
+.modo-oscuro vaadin-select::part(input-field) {
+  background-color: #334155;
+  color: #f8fafc;
+}
+
 body {
   background-color: var(--citacloud-bg);
   font-family: var(--lumo-font-family);
@@ -130,4 +312,34 @@ body {
   justify-content: center;
   font-size: 1.25rem;
   font-weight: 800;
+}
+
+/* Ajustes finales de contraste del modo oscuro para componentes con colores
+ * fijados directamente desde las vistas Vaadin. */
+.modo-oscuro .dashboard-summary {
+  background-color: #334155 !important;
+  border: 1px solid #475569;
+}
+
+.modo-oscuro .dashboard-summary-total {
+  color: #60a5fa !important;
+}
+
+.modo-oscuro .dashboard-summary-label {
+  color: #e2e8f0 !important;
+}
+
+.modo-oscuro .horarios-semanal {
+  background-color: #1e293b !important;
+  border: 1px solid #334155;
+}
+
+.modo-oscuro .horarios-semanal h4 {
+  color: #f8fafc !important;
+}
+
+.modo-oscuro .horarios-semanal vaadin-button {
+  background-color: #334155 !important;
+  border: 1px solid #475569;
+  color: #bfdbfe !important;
 }

@@ -26,6 +26,7 @@ public class PaginadorTabla<T> extends HorizontalLayout {
 
     public PaginadorTabla(Grid<T> tabla) {
         this.tabla = tabla;
+        addClassName("paginador-tabla");
         setWidthFull();
         setAlignItems(FlexComponent.Alignment.CENTER);
         setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
