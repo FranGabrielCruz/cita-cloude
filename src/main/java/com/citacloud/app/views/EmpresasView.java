@@ -9,6 +9,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -32,6 +33,7 @@ import jakarta.annotation.security.PermitAll;
 @Route(value = "empresas", layout = MainLayout.class)
 @PageTitle("Empresas | CitaCloud")
 @PermitAll
+@CssImport("./styles/mobile-layouts.css")
 public class EmpresasView extends VerticalLayout implements BeforeEnterObserver {
     private final EmpresaAdministracionService empresaService;
     private final Grid<Empresa> empresas = new Grid<>(Empresa.class, false);
@@ -56,7 +58,7 @@ public class EmpresasView extends VerticalLayout implements BeforeEnterObserver 
 
     private VerticalLayout filtros() {
         codigoFiltro.setPlaceholder("Buscar por c\u00f3digo"); nombreFiltro.setPlaceholder("Buscar por nombre"); estadoFiltro.setItems("Todos", "Activas", "Inactivas"); estadoFiltro.setValue("Todos");
-        HorizontalLayout fila = new HorizontalLayout(codigoFiltro, nombreFiltro, estadoFiltro); fila.setWidthFull(); fila.setFlexGrow(1, codigoFiltro, nombreFiltro); fila.getStyle().set("background", "white").set("padding", "1rem").set("border-radius", "12px").set("border", "1px solid #e2e8f0");
+        HorizontalLayout fila = new HorizontalLayout(codigoFiltro, nombreFiltro, estadoFiltro); fila.addClassName("mobile-stacked-filters"); fila.setWidthFull(); fila.setFlexGrow(1, codigoFiltro, nombreFiltro); fila.getStyle().set("background", "white").set("padding", "1rem").set("border-radius", "12px").set("border", "1px solid #e2e8f0");
         VerticalLayout contenedor = new VerticalLayout(fila); contenedor.setPadding(false); contenedor.setSpacing(false); return contenedor;
     }
 

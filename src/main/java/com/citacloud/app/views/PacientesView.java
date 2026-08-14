@@ -125,6 +125,7 @@ public class PacientesView extends VerticalLayout {
             return editar;
         }).setHeader("ACCIONES").setWidth("120px").setFlexGrow(0);
         grid.setWidthFull();
+        grid.setAllRowsVisible(true);
     }
 
     private void actualizarBusqueda(UUID empresaId, String termino) {

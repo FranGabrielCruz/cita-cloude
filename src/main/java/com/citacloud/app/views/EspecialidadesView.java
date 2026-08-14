@@ -101,6 +101,7 @@ public class EspecialidadesView extends VerticalLayout {
             return editar;
         }).setHeader("ACCIONES").setWidth("120px").setFlexGrow(0);
         grid.setWidthFull();
+        grid.setAllRowsVisible(true);
     }
 
     private void actualizarEspecialidades() {

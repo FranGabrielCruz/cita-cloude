@@ -135,6 +135,7 @@ public class MedicosView extends VerticalLayout {
             return editar;
         }).setHeader("ACCIONES").setWidth("120px").setFlexGrow(0);
         grid.setWidthFull();
+        grid.setAllRowsVisible(true);
     }
 
     private void actualizarMedicos() {

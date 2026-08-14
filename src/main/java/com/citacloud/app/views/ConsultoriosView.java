@@ -124,6 +124,7 @@ public class ConsultoriosView extends VerticalLayout {
             return editar;
         }).setHeader("ACCIONES").setWidth("115px").setFlexGrow(0);
         grid.setWidthFull();
+        grid.setAllRowsVisible(true);
     }
 
     private void actualizarConsultorios() {

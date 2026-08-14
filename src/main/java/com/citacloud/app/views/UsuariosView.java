@@ -101,6 +101,7 @@ public class UsuariosView extends VerticalLayout {
         grid.addComponentColumn(usuario -> { Span estado = new Span(Boolean.TRUE.equals(usuario.getActivo()) ? "Activo" : "Inactivo"); estado.addClassName(Boolean.TRUE.equals(usuario.getActivo()) ? "badge-activo" : "badge-inactivo"); return estado; }).setHeader("ESTADO").setWidth("120px").setFlexGrow(0);
         grid.addComponentColumn(usuario -> { Button editar = new Button(VaadinIcon.EDIT.create(), event -> abrirFormulario(usuario)); editar.setTooltipText("Editar"); editar.addThemeVariants(ButtonVariant.LUMO_TERTIARY); return editar; }).setHeader("ACCIONES").setWidth("115px").setFlexGrow(0);
         grid.setWidthFull();
+        grid.setAllRowsVisible(true);
     }
 
     private void actualizarUsuarios() {
