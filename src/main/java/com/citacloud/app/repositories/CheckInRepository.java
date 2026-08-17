@@ -1,0 +1,1 @@
+package com.citacloud.app.repositories; import com.citacloud.app.models.CheckIn; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface CheckInRepository extends JpaRepository<CheckIn,UUID>{boolean existsByEmpresaIdAndCitaId(UUID empresaId,UUID citaId);List<CheckIn> findByEmpresaIdOrderByFechaHoraLlegadaDesc(UUID empresaId);}

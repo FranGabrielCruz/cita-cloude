@@ -277,16 +277,33 @@ public class MainLayout extends AppLayout {
         nav.addItem(administracion);
         nav.addItem(new SideNavItem("Usuarios", "usuarios", VaadinIcon.USER_CHECK.create()));
         nav.addItem(new SideNavItem("Roles", "roles", VaadinIcon.KEY.create()));
-        SideNavItem gestionAdministrativa = new SideNavItem("GESTIÓN ADMINISTRATIVA");
-        gestionAdministrativa.addClassName("sidebar-section");
-        nav.addItem(gestionAdministrativa);
+        SideNavItem operacionClinica = new SideNavItem("OPERACIÓN CLÍNICA");
+        operacionClinica.addClassName("sidebar-section");
+        nav.addItem(operacionClinica);
         nav.addItem(new SideNavItem("Aprobación de citas", "aprobacion-citas", VaadinIcon.CHECK_CIRCLE.create()));
-        nav.addItem(new SideNavItem("Recordatorios", "recordatorios", VaadinIcon.BELL.create()));
-        nav.addItem(new SideNavItem("Historial clínico", "historial-clinico", VaadinIcon.CLIPBOARD_HEART.create()));
+        nav.addItem(new SideNavItem("Check-in", "check-in", VaadinIcon.SIGN_IN.create()));
+        nav.addItem(new SideNavItem("Sala de espera", "sala-espera", VaadinIcon.USERS.create()));
+        nav.addItem(new SideNavItem("Signos vitales", "signos-vitales", VaadinIcon.HEART.create()));
+        nav.addItem(new SideNavItem("Consulta médica", "consulta-medica", VaadinIcon.STETHOSCOPE.create()));
+        nav.addItem(new SideNavItem("Expediente clínico", "historial-clinico", VaadinIcon.CLIPBOARD_HEART.create()));
+        nav.addItem(new SideNavItem("Antecedentes", "antecedentes", VaadinIcon.CLIPBOARD.create()));
+        nav.addItem(new SideNavItem("Alergias", "alergias", VaadinIcon.WARNING.create()));
+        nav.addItem(new SideNavItem("Diagnósticos", "diagnosticos", VaadinIcon.CHECK_SQUARE.create()));
+        nav.addItem(new SideNavItem("Tratamientos", "tratamientos", VaadinIcon.PILLS.create()));
+        nav.addItem(new SideNavItem("Recetas", "recetas", VaadinIcon.FILE_TEXT.create()));
+        nav.addItem(new SideNavItem("Órdenes / Estudios", "ordenes-estudios", VaadinIcon.FLASK.create()));
+        nav.addItem(new SideNavItem("Notificaciones", "recordatorios", VaadinIcon.BELL.create()));
+        nav.addItem(new SideNavItem("Expediente clínico", "historial-clinico", VaadinIcon.CLIPBOARD_HEART.create()));
         nav.addItem(new SideNavItem("Documentos", "documentos", VaadinIcon.FILE_TEXT.create()));
+        SideNavItem gestionFinanciera = new SideNavItem("GESTIÓN FINANCIERA");
+        gestionFinanciera.addClassName("sidebar-section");
+        nav.addItem(gestionFinanciera);
         nav.addItem(new SideNavItem("Facturación", "facturacion", VaadinIcon.INVOICE.create()));
         nav.addItem(new SideNavItem("Pagos", "pagos", VaadinIcon.CREDIT_CARD.create()));
         nav.addItem(new SideNavItem("Cuentas por cobrar", "cuentas-por-cobrar", VaadinIcon.DOLLAR.create()));
+        SideNavItem gestionControl = new SideNavItem("GESTIÓN Y CONTROL");
+        gestionControl.addClassName("sidebar-section");
+        nav.addItem(gestionControl);
         nav.addItem(new SideNavItem("Reportes", "reportes", VaadinIcon.CHART.create()));
         nav.addItem(new SideNavItem("Auditoría", "auditoria", VaadinIcon.EYE.create()));
         SideNavItem empresas = new SideNavItem("Empresas", "empresas", VaadinIcon.BUILDING.create());
@@ -308,9 +325,9 @@ public class MainLayout extends AppLayout {
                         || "ROLE_SUPERADMIN".equals(authority.getAuthority()));
         String[] permisos = {"MENU_DASHBOARD", null, "MENU_MI_AGENDA", "MENU_CITAS", "MENU_PACIENTES", "MENU_MEDICOS",
                 "MENU_ESPECIALIDADES", "MENU_HORARIOS", "MENU_CONSULTORIOS", "MENU_SEGUROS", null,
-                "MENU_USUARIOS", "MENU_ROLES", null, "MENU_APROBACION_CITAS", "MENU_RECORDATORIOS",
-                "MENU_HISTORIAL_CLINICO", "MENU_DOCUMENTOS", "MENU_FACTURACION", "MENU_PAGOS",
-                "MENU_CUENTAS_COBRAR", "MENU_REPORTES", "MENU_AUDITORIA", null};
+                "MENU_USUARIOS", "MENU_ROLES", null, "MENU_APROBACION_CITAS", "MENU_CHECKIN", "MENU_SALA_ESPERA", "MENU_SIGNOS_VITALES", "MENU_CONSULTA_MEDICA", "MENU_EXPEDIENTE_CLINICO", "MENU_ANTECEDENTES", "MENU_ALERGIAS", "MENU_DIAGNOSTICOS", "MENU_TRATAMIENTOS", "MENU_RECETAS", "MENU_ORDENES_ESTUDIOS", "MENU_RECORDATORIOS",
+                "MENU_HISTORIAL_CLINICO", "MENU_DOCUMENTOS", null, "MENU_FACTURACION", "MENU_PAGOS",
+                "MENU_CUENTAS_COBRAR", null, "MENU_REPORTES", "MENU_AUDITORIA", null};
         var elementos = nav.getElement().getChildren().toList();
         for (int indice = 0; indice < elementos.size() && indice < permisos.length; indice++) {
             String permiso = permisos[indice];
