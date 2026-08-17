@@ -295,12 +295,19 @@ public class MainLayout extends AppLayout {
         nav.addItem(new SideNavItem("Notificaciones", "recordatorios", VaadinIcon.BELL.create()));
         nav.addItem(new SideNavItem("Expediente clínico", "historial-clinico", VaadinIcon.CLIPBOARD_HEART.create()));
         nav.addItem(new SideNavItem("Documentos", "documentos", VaadinIcon.FILE_TEXT.create()));
-        SideNavItem gestionFinanciera = new SideNavItem("GESTIÓN FINANCIERA");
+        SideNavItem gestionFinanciera = new SideNavItem("GESTIÓN FINANCIERA Y OPERATIVA");
         gestionFinanciera.addClassName("sidebar-section");
         nav.addItem(gestionFinanciera);
         nav.addItem(new SideNavItem("Facturación", "facturacion", VaadinIcon.INVOICE.create()));
+        nav.addItem(new SideNavItem("e-CF", "e-cf", VaadinIcon.FILE_CODE.create()));
+        nav.addItem(new SideNavItem("Caja", "caja", VaadinIcon.CASH.create()));
         nav.addItem(new SideNavItem("Pagos", "pagos", VaadinIcon.CREDIT_CARD.create()));
         nav.addItem(new SideNavItem("Cuentas por cobrar", "cuentas-por-cobrar", VaadinIcon.DOLLAR.create()));
+        nav.addItem(new SideNavItem("ARS", "ars", VaadinIcon.UMBRELLA.create()));
+        nav.addItem(new SideNavItem("Inventario", "inventario", VaadinIcon.PACKAGE.create()));
+        nav.addItem(new SideNavItem("Farmacia", "farmacia", VaadinIcon.PILLS.create()));
+        nav.addItem(new SideNavItem("Laboratorio", "laboratorio", VaadinIcon.FLASK.create()));
+        nav.addItem(new SideNavItem("Reportes financieros", "reportes-financieros", VaadinIcon.CHART_LINE.create()));
         SideNavItem gestionControl = new SideNavItem("GESTIÓN Y CONTROL");
         gestionControl.addClassName("sidebar-section");
         nav.addItem(gestionControl);
@@ -327,7 +334,7 @@ public class MainLayout extends AppLayout {
                 "MENU_ESPECIALIDADES", "MENU_HORARIOS", "MENU_CONSULTORIOS", "MENU_SEGUROS", null,
                 "MENU_USUARIOS", "MENU_ROLES", null, "MENU_APROBACION_CITAS", "MENU_CHECKIN", "MENU_SALA_ESPERA", "MENU_SIGNOS_VITALES", "MENU_CONSULTA_MEDICA", "MENU_EXPEDIENTE_CLINICO", "MENU_ANTECEDENTES", "MENU_ALERGIAS", "MENU_DIAGNOSTICOS", "MENU_TRATAMIENTOS", "MENU_RECETAS", "MENU_ORDENES_ESTUDIOS", "MENU_RECORDATORIOS",
                 "MENU_HISTORIAL_CLINICO", "MENU_DOCUMENTOS", null, "MENU_FACTURACION", "MENU_PAGOS",
-                "MENU_CUENTAS_COBRAR", null, "MENU_REPORTES", "MENU_AUDITORIA", null};
+                "MENU_ECF", "MENU_CAJA", "MENU_PAGOS", "MENU_CUENTAS_COBRAR", "MENU_ARS", "MENU_INVENTARIO", "MENU_FARMACIA", "MENU_LABORATORIO", "MENU_REPORTES_FINANCIEROS", null, "MENU_REPORTES", "MENU_AUDITORIA", null};
         var elementos = nav.getElement().getChildren().toList();
         for (int indice = 0; indice < elementos.size() && indice < permisos.length; indice++) {
             String permiso = permisos[indice];
