@@ -2,12 +2,15 @@ package com.citacloud.app.views;
 
 import com.citacloud.app.models.Empresa;
 import com.citacloud.app.models.Sucursal;
+import com.citacloud.app.models.ConfiguracionEmpresaFase2;
 import com.citacloud.app.security.AuthService;
 import com.citacloud.app.security.TenantUserDetails;
 import com.citacloud.app.services.EmpresaService;
 import com.citacloud.app.services.SucursalService;
+import com.citacloud.app.services.ConfiguracionFase2Service;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -22,6 +25,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.PageTitle;
@@ -38,12 +42,15 @@ public class ConfiguracionView extends VerticalLayout {
 
     private final EmpresaService empresaService;
     private final SucursalService sucursalService;
+    private final ConfiguracionFase2Service configuracionFase2Service;
     private final UUID empresaId;
     private final Grid<Sucursal> sucursales = new Grid<>(Sucursal.class, false);
 
-    public ConfiguracionView(EmpresaService empresaService, SucursalService sucursalService) {
+    public ConfiguracionView(EmpresaService empresaService, SucursalService sucursalService,
+                             ConfiguracionFase2Service configuracionFase2Service) {
         this.empresaService = empresaService;
         this.sucursalService = sucursalService;
+        this.configuracionFase2Service = configuracionFase2Service;
         TenantUserDetails usuario = AuthService.getAuthenticatedUser();
         empresaId = usuario == null ? null : usuario.getEmpresaId();
 
@@ -58,7 +65,46 @@ public class ConfiguracionView extends VerticalLayout {
         HorizontalLayout encabezado = new HorizontalLayout(titulo, datosInstitucion.guardar());
         encabezado.setWidthFull(); encabezado.setAlignItems(FlexComponent.Alignment.CENTER);
         encabezado.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
-        add(encabezado, datosInstitucion.tarjeta(), crearSucursales());
+        add(encabezado, datosInstitucion.tarjeta(), crearPreferenciasOperativas(), crearSucursales());
+    }
+
+    private VerticalLayout crearPreferenciasOperativas() {
+        VerticalLayout tarjeta = tarjeta();
+        H3 titulo = new H3("Preferencias operativas");
+        titulo.getStyle().set("margin", "0");
+        ConfiguracionEmpresaFase2 configuracion = empresaId == null
+                ? new ConfiguracionEmpresaFase2() : configuracionFase2Service.obtener(empresaId);
+        Checkbox requiereAprobacion = new Checkbox("Las solicitudes de pacientes requieren aprobación",
+                configuracion.isRequiereAprobacionCitas());
+        Checkbox recordatorios = new Checkbox("Recordatorios activos", configuracion.isRecordatoriosActivos());
+        TextField prefijo = new TextField("Prefijo de factura", valor(configuracion.getPrefijoFactura()));
+        IntegerField siguiente = new IntegerField("Siguiente número de factura");
+        siguiente.setValue(configuracion.getSiguienteFactura() > 0 ? configuracion.getSiguienteFactura() : 1);
+        prefijo.setRequiredIndicatorVisible(true);
+        siguiente.setRequiredIndicatorVisible(true);
+        FormLayout formulario = new FormLayout(requiereAprobacion, recordatorios, prefijo, siguiente);
+        formulario.setWidthFull();
+        formulario.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1), new FormLayout.ResponsiveStep("620px", 2));
+        Button guardar = new Button(VaadinIcon.DISC.create());
+        guardar.setTooltipText("Guardar preferencias");
+        guardar.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        guardar.getStyle().set("background-color", "#16a34a").set("color", "#ffffff");
+        guardar.addClickListener(event -> {
+            try {
+                if (empresaId == null) throw new IllegalArgumentException("No se pudo identificar la empresa.");
+                configuracionFase2Service.guardar(empresaId, requiereAprobacion.getValue(), prefijo.getValue(),
+                        siguiente.getValue() == null ? 1 : siguiente.getValue(), recordatorios.getValue());
+                Notification.show("Preferencias guardadas.", 3000, Notification.Position.BOTTOM_START);
+            } catch (IllegalArgumentException exception) {
+                Notification.show(exception.getMessage(), 4000, Notification.Position.MIDDLE);
+            }
+        });
+        HorizontalLayout encabezado = new HorizontalLayout(titulo, guardar);
+        encabezado.setWidthFull();
+        encabezado.setAlignItems(FlexComponent.Alignment.CENTER);
+        encabezado.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+        tarjeta.add(encabezado, formulario);
+        return tarjeta;
     }
 
     private DatosInstitucion crearDatosInstitucion() {

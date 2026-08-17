@@ -44,6 +44,9 @@ public class Usuario {
     @Column(nullable = false)
     private Boolean activo = true;
 
+    @Column(name = "preferencia_tema", nullable = false, length = 12)
+    private String preferenciaTema = "SISTEMA";
+
     @Column(name = "creado_en", nullable = false, updatable = false)
     private LocalDateTime creadoEn = LocalDateTime.now();
 
@@ -88,6 +91,9 @@ public class Usuario {
 
     public Boolean getActivo() { return activo; }
     public void setActivo(Boolean activo) { this.activo = activo; }
+
+    public String getPreferenciaTema() { return preferenciaTema; }
+    public void setPreferenciaTema(String preferenciaTema) { this.preferenciaTema = preferenciaTema; }
 
     public LocalDateTime getCreadoEn() { return creadoEn; }
     public void setCreadoEn(LocalDateTime creadoEn) { this.creadoEn = creadoEn; }

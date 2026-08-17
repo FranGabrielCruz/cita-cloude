@@ -16,12 +16,14 @@ public class CitaService {
     private final CitaRepository citaRepository;
     private final DisponibilidadService disponibilidadService;
     private final MedicoRepository medicoRepository;
+    private final ConfiguracionFase2Service configuracionFase2Service;
 
     public CitaService(CitaRepository citaRepository, DisponibilidadService disponibilidadService,
-                       MedicoRepository medicoRepository) {
+                       MedicoRepository medicoRepository, ConfiguracionFase2Service configuracionFase2Service) {
         this.citaRepository = citaRepository;
         this.disponibilidadService = disponibilidadService;
         this.medicoRepository = medicoRepository;
+        this.configuracionFase2Service = configuracionFase2Service;
     }
 
     public List<Cita> listarPorEmpresa(UUID empresaId) {
@@ -54,7 +56,8 @@ public class CitaService {
         }
 
         cita.setEmpresaId(empresaId);
-        cita.setEstado("CONFIRMADA");
+        boolean requiereAprobacion = configuracionFase2Service.obtener(empresaId).isRequiereAprobacionCitas();
+        cita.setEstado(requiereAprobacion ? "PENDIENTE" : "CONFIRMADA");
         return citaRepository.save(cita);
     }
 
@@ -117,6 +120,19 @@ public class CitaService {
             throw new IllegalArgumentException("La cita ya está cancelada.");
         }
         cita.setEstado("CANCELADA");
+        citaRepository.save(cita);
+    }
+
+    /** Aprueba una solicitud volviendo a validar disponibilidad antes de confirmarla. */
+    public void aprobar(UUID empresaId, UUID citaId) {
+        Cita cita = citaRepository.findById(citaId)
+                .filter(encontrada -> empresaId.equals(encontrada.getEmpresaId()))
+                .orElseThrow(() -> new IllegalArgumentException("Cita no encontrada para esta empresa."));
+        if (!"PENDIENTE".equals(cita.getEstado())) {
+            throw new IllegalArgumentException("Solo se pueden aprobar citas pendientes.");
+        }
+        validarDisponibilidad(empresaId, cita, cita.getId());
+        cita.setEstado("CONFIRMADA");
         citaRepository.save(cita);
     }
 

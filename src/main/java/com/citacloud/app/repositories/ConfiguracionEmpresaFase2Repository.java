@@ -1,0 +1,1 @@
+package com.citacloud.app.repositories; import com.citacloud.app.models.ConfiguracionEmpresaFase2; import org.springframework.data.jpa.repository.JpaRepository; import java.util.UUID; public interface ConfiguracionEmpresaFase2Repository extends JpaRepository<ConfiguracionEmpresaFase2,UUID>{}

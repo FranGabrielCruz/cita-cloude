@@ -314,6 +314,33 @@ body {
   font-weight: 800;
 }
 
+/* Bloques del menú lateral: separan claramente los módulos del MVP,
+   la administración y las extensiones de Fase 2. */
+vaadin-side-nav-item.sidebar-section {
+  border-top: 1px solid var(--citacloud-border);
+  margin: 0.75rem 0 0.35rem;
+  padding-top: 0.75rem;
+  pointer-events: none;
+  --lumo-body-text-color: var(--lumo-primary-text-color);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+}
+
+vaadin-side-nav-item.sidebar-section::part(link) {
+  color: var(--lumo-primary-text-color);
+  opacity: 1;
+}
+
+.fase2-empty-state {
+  background: var(--citacloud-surface);
+  border: 1px dashed var(--citacloud-border);
+  border-radius: var(--citacloud-radius);
+  color: var(--citacloud-text-secondary);
+  padding: 2rem;
+  text-align: center;
+}
+
 /* Ajustes finales de contraste del modo oscuro para componentes con colores
  * fijados directamente desde las vistas Vaadin. */
 .modo-oscuro .dashboard-summary {

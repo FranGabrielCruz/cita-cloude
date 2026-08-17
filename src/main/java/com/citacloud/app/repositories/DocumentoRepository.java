@@ -1,0 +1,1 @@
+package com.citacloud.app.repositories; import com.citacloud.app.models.Documento; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface DocumentoRepository extends JpaRepository<Documento,UUID>{List<Documento> findByEmpresaIdOrderByFechaDesc(UUID empresaId);Optional<Documento> findByIdAndEmpresaId(UUID id,UUID empresaId);}

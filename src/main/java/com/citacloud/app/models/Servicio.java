@@ -1,0 +1,5 @@
+package com.citacloud.app.models;
+import jakarta.persistence.*; import java.math.BigDecimal; import java.util.UUID;
+@Entity @Table(name="servicios", uniqueConstraints=@UniqueConstraint(columnNames={"empresa_id","codigo"}))
+public class Servicio { @Id @GeneratedValue private UUID id; @Column(name="empresa_id",nullable=false) private UUID empresaId; private String codigo; private String nombre; private String descripcion; private BigDecimal precio=BigDecimal.ZERO; private Boolean activo=true;
+ public UUID getId(){return id;} public UUID getEmpresaId(){return empresaId;} public void setEmpresaId(UUID v){empresaId=v;} public String getCodigo(){return codigo;} public void setCodigo(String v){codigo=v;} public String getNombre(){return nombre;} public void setNombre(String v){nombre=v;} public String getDescripcion(){return descripcion;} public void setDescripcion(String v){descripcion=v;} public BigDecimal getPrecio(){return precio;} public void setPrecio(BigDecimal v){precio=v;} public Boolean getActivo(){return activo;} public void setActivo(Boolean v){activo=v;} }

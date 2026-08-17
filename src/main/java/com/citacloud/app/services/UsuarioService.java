@@ -75,6 +75,16 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
+    @Transactional
+    public void guardarPreferenciaTema(UUID empresaId, UUID id, String tema) {
+        if (!Set.of("CLARO", "OSCURO", "SISTEMA").contains(tema)) {
+            throw new IllegalArgumentException("Tema no válido.");
+        }
+        Usuario usuario = obtener(empresaId, id);
+        usuario.setPreferenciaTema(tema);
+        usuarioRepository.save(usuario);
+    }
+
     private void actualizarDatos(Usuario usuario, UUID empresaId, String nombreUsuario, String nombre, String apellido,
                                  String email, String telefono, String contrasena, String confirmacion, Rol rol,
                                  boolean contrasenaObligatoria) {

@@ -1,0 +1,1 @@
+package com.citacloud.app.repositories; import com.citacloud.app.models.AuditoriaEvento; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface AuditoriaEventoRepository extends JpaRepository<AuditoriaEvento,UUID>{List<AuditoriaEvento> findByEmpresaIdOrderByFechaDesc(UUID empresaId);}

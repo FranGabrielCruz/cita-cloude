@@ -3,6 +3,7 @@ package com.citacloud.app.views;
 import com.citacloud.app.security.AuthService;
 import com.citacloud.app.security.TenantUserDetails;
 import com.citacloud.app.services.EmpresaService;
+import com.citacloud.app.services.UsuarioService;
 import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.HasElement;
@@ -18,7 +19,6 @@ import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
@@ -31,9 +31,11 @@ public class MainLayout extends AppLayout {
     private static final String ESPACIO_FOOTER = "3.75rem";
     private static final String MODO_OSCURO = "citacloud.modoOscuro";
     private final EmpresaService empresaService;
+    private final UsuarioService usuarioService;
 
-    public MainLayout(EmpresaService empresaService) {
+    public MainLayout(EmpresaService empresaService, UsuarioService usuarioService) {
         this.empresaService = empresaService;
+        this.usuarioService = usuarioService;
         aplicarModoOscuroGuardado();
         getElement().executeJs("const oscuro = localStorage.getItem('citacloud.modoOscuro') === 'true'; this.$server.sincronizarModoOscuro(oscuro);");
         setPrimarySection(Section.DRAWER);
@@ -69,7 +71,9 @@ public class MainLayout extends AppLayout {
             }
         }
 
-        RouterLink empresaActual = new RouterLink(empresaNombre, DashboardView.class);
+        RouterLink empresaActual = new RouterLink();
+        empresaActual.setText(empresaNombre);
+        empresaActual.getElement().setAttribute("href", "");
         empresaActual.addClassName("empresa-actual");
         empresaActual.getStyle()
                 .set("font-weight", "600")
@@ -95,7 +99,7 @@ public class MainLayout extends AppLayout {
         boolean puedeConfigurar = user != null && user.getAuthorities().stream()
                 .anyMatch(authority -> "MENU_CONFIGURACION".equals(authority.getAuthority()));
         if (puedeConfigurar) {
-            menuBtn.getSubMenu().addItem("Configuración", e -> UI.getCurrent().navigate(ConfiguracionView.class));
+            menuBtn.getSubMenu().addItem("Configuración", e -> UI.getCurrent().navigate("configuracion"));
         }
         menuBtn.getSubMenu().addItem("Cerrar Sesión", e -> {
             AuthService.logout();
@@ -123,6 +127,8 @@ public class MainLayout extends AppLayout {
     private void cambiarModoOscuro() {
         boolean oscuro = !modoOscuroActivo();
         VaadinSession.getCurrent().setAttribute(MODO_OSCURO, oscuro);
+        TenantUserDetails usuario = AuthService.getAuthenticatedUser();
+        if (usuario != null) usuarioService.guardarPreferenciaTema(usuario.getEmpresaId(), usuario.getUsuarioId(), oscuro ? "OSCURO" : "CLARO");
         aplicarTema(oscuro);
         getElement().executeJs("localStorage.setItem('citacloud.modoOscuro', $0); window.location.reload();", oscuro);
     }
@@ -136,7 +142,18 @@ public class MainLayout extends AppLayout {
     }
 
     private void aplicarModoOscuroGuardado() {
-        aplicarTema(modoOscuroActivo());
+        TenantUserDetails usuario = AuthService.getAuthenticatedUser();
+        boolean oscuro = modoOscuroActivo();
+        if (usuario != null) {
+            try {
+                String preferencia = usuarioService.buscar(usuario.getEmpresaId(), usuario.getUsername(), "", null, true).stream()
+                        .filter(item -> item.getId().equals(usuario.getUsuarioId())).findFirst()
+                        .map(item -> item.getPreferenciaTema()).orElse("SISTEMA");
+                oscuro = "OSCURO".equals(preferencia);
+                VaadinSession.getCurrent().setAttribute(MODO_OSCURO, oscuro);
+            } catch (Exception ignored) { }
+        }
+        aplicarTema(oscuro);
     }
 
     private boolean modoOscuroActivo() {
@@ -202,10 +219,11 @@ public class MainLayout extends AppLayout {
         Header header = new Header(new HorizontalLayout(logoIcon, new Div(brandTitle, brandSub)));
         header.addClassNames(LumoUtility.Padding.MEDIUM);
 
-        Scroller scroller = new Scroller(createNavigation());
-        scroller.addClassNames(LumoUtility.Padding.SMALL);
-
-        addToDrawer(header, scroller);
+        SideNav navigation = createNavigation();
+        navigation.addClassNames(LumoUtility.Padding.SMALL);
+        // AppLayout ya controla el desplazamiento del drawer; un Scroller aquí
+        // producía una segunda barra vertical.
+        addToDrawer(header, navigation);
     }
 
     private void addBodyFooter() {
@@ -242,18 +260,36 @@ public class MainLayout extends AppLayout {
     private SideNav createNavigation() {
         SideNav nav = new SideNav();
 
-        nav.addItem(new SideNavItem("Dashboard", DashboardView.class, VaadinIcon.DASHBOARD.create()));
-        nav.addItem(new SideNavItem("Mi agenda", MiAgendaView.class, VaadinIcon.CALENDAR_CLOCK.create()));
-        nav.addItem(new SideNavItem("Citas", CitasView.class, VaadinIcon.CALENDAR.create()));
-        nav.addItem(new SideNavItem("Pacientes", PacientesView.class, VaadinIcon.USERS.create()));
-        nav.addItem(new SideNavItem("Médicos", MedicosView.class, VaadinIcon.DOCTOR.create()));
-        nav.addItem(new SideNavItem("Especialidades", EspecialidadesView.class, VaadinIcon.DIPLOMA.create()));
-        nav.addItem(new SideNavItem("Horarios", HorariosView.class, VaadinIcon.CLOCK.create()));
-        nav.addItem(new SideNavItem("Consultorios", ConsultoriosView.class, VaadinIcon.OFFICE.create()));
-        nav.addItem(new SideNavItem("Seguros", SegurosView.class, VaadinIcon.SHIELD.create()));
-        nav.addItem(new SideNavItem("Usuarios", UsuariosView.class, VaadinIcon.USER_CHECK.create()));
-        nav.addItem(new SideNavItem("Roles", RolesView.class, VaadinIcon.KEY.create()));
-        SideNavItem empresas = new SideNavItem("Empresas", EmpresasView.class, VaadinIcon.BUILDING.create());
+        nav.addItem(new SideNavItem("Dashboard", "", VaadinIcon.DASHBOARD.create()));
+        SideNavItem gestionClinica = new SideNavItem("GESTIÓN CLÍNICA");
+        gestionClinica.addClassName("sidebar-section");
+        nav.addItem(gestionClinica);
+        nav.addItem(new SideNavItem("Mi agenda", "mi-agenda", VaadinIcon.CALENDAR_CLOCK.create()));
+        nav.addItem(new SideNavItem("Citas", "citas", VaadinIcon.CALENDAR.create()));
+        nav.addItem(new SideNavItem("Pacientes", "pacientes", VaadinIcon.USERS.create()));
+        nav.addItem(new SideNavItem("Médicos", "medicos", VaadinIcon.DOCTOR.create()));
+        nav.addItem(new SideNavItem("Especialidades", "especialidades", VaadinIcon.DIPLOMA.create()));
+        nav.addItem(new SideNavItem("Horarios", "horarios", VaadinIcon.CLOCK.create()));
+        nav.addItem(new SideNavItem("Consultorios", "consultorios", VaadinIcon.OFFICE.create()));
+        nav.addItem(new SideNavItem("Seguros", "seguros", VaadinIcon.SHIELD.create()));
+        SideNavItem administracion = new SideNavItem("ADMINISTRACIÓN");
+        administracion.addClassName("sidebar-section");
+        nav.addItem(administracion);
+        nav.addItem(new SideNavItem("Usuarios", "usuarios", VaadinIcon.USER_CHECK.create()));
+        nav.addItem(new SideNavItem("Roles", "roles", VaadinIcon.KEY.create()));
+        SideNavItem gestionAdministrativa = new SideNavItem("GESTIÓN ADMINISTRATIVA");
+        gestionAdministrativa.addClassName("sidebar-section");
+        nav.addItem(gestionAdministrativa);
+        nav.addItem(new SideNavItem("Aprobación de citas", "aprobacion-citas", VaadinIcon.CHECK_CIRCLE.create()));
+        nav.addItem(new SideNavItem("Recordatorios", "recordatorios", VaadinIcon.BELL.create()));
+        nav.addItem(new SideNavItem("Historial clínico", "historial-clinico", VaadinIcon.CLIPBOARD_HEART.create()));
+        nav.addItem(new SideNavItem("Documentos", "documentos", VaadinIcon.FILE_TEXT.create()));
+        nav.addItem(new SideNavItem("Facturación", "facturacion", VaadinIcon.INVOICE.create()));
+        nav.addItem(new SideNavItem("Pagos", "pagos", VaadinIcon.CREDIT_CARD.create()));
+        nav.addItem(new SideNavItem("Cuentas por cobrar", "cuentas-por-cobrar", VaadinIcon.DOLLAR.create()));
+        nav.addItem(new SideNavItem("Reportes", "reportes", VaadinIcon.CHART.create()));
+        nav.addItem(new SideNavItem("Auditoría", "auditoria", VaadinIcon.EYE.create()));
+        SideNavItem empresas = new SideNavItem("Empresas", "empresas", VaadinIcon.BUILDING.create());
         TenantUserDetails usuario = AuthService.getAuthenticatedUser();
         empresas.setVisible(usuario != null && usuario.getAuthorities().stream()
                 .anyMatch(authority -> "ROLE_SUPERADMIN".equals(authority.getAuthority())));
@@ -267,14 +303,19 @@ public class MainLayout extends AppLayout {
         if (usuario == null) {
             return;
         }
-        String[] permisos = {"MENU_DASHBOARD", "MENU_MI_AGENDA", "MENU_CITAS", "MENU_PACIENTES", "MENU_MEDICOS",
-                "MENU_ESPECIALIDADES", "MENU_HORARIOS", "MENU_CONSULTORIOS", "MENU_SEGUROS",
-                "MENU_USUARIOS", "MENU_ROLES", null};
+        boolean esAdministrador = usuario.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMINISTRADOR".equals(authority.getAuthority())
+                        || "ROLE_SUPERADMIN".equals(authority.getAuthority()));
+        String[] permisos = {"MENU_DASHBOARD", null, "MENU_MI_AGENDA", "MENU_CITAS", "MENU_PACIENTES", "MENU_MEDICOS",
+                "MENU_ESPECIALIDADES", "MENU_HORARIOS", "MENU_CONSULTORIOS", "MENU_SEGUROS", null,
+                "MENU_USUARIOS", "MENU_ROLES", null, "MENU_APROBACION_CITAS", "MENU_RECORDATORIOS",
+                "MENU_HISTORIAL_CLINICO", "MENU_DOCUMENTOS", "MENU_FACTURACION", "MENU_PAGOS",
+                "MENU_CUENTAS_COBRAR", "MENU_REPORTES", "MENU_AUDITORIA", null};
         var elementos = nav.getElement().getChildren().toList();
         for (int indice = 0; indice < elementos.size() && indice < permisos.length; indice++) {
             String permiso = permisos[indice];
             if (permiso == null) continue;
-            boolean permitido = usuario.getAuthorities().stream()
+            boolean permitido = esAdministrador || usuario.getAuthorities().stream()
                     .anyMatch(authority -> permiso.equals(authority.getAuthority()));
             elementos.get(indice).setVisible(permitido);
         }
