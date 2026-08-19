@@ -122,6 +122,10 @@ public class UsuarioService {
                 .orElseThrow(() -> new IllegalArgumentException("No se encontr\u00f3 el usuario solicitado."));
     }
 
+    public String nombreCompleto(UUID empresaId, UUID id) {
+        return id == null ? "—" : obtener(empresaId, id).getNombreCompleto();
+    }
+
     private String limpiar(String valor) { return valor == null ? "" : valor.trim(); }
     private String normalizar(String valor) { return limpiar(valor).toLowerCase(Locale.ROOT); }
 }

@@ -11,6 +11,7 @@ import com.citacloud.app.services.ConfiguracionFase2Service;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -82,7 +83,10 @@ public class ConfiguracionView extends VerticalLayout {
         siguiente.setValue(configuracion.getSiguienteFactura() > 0 ? configuracion.getSiguienteFactura() : 1);
         prefijo.setRequiredIndicatorVisible(true);
         siguiente.setRequiredIndicatorVisible(true);
-        FormLayout formulario = new FormLayout(requiereAprobacion, recordatorios, prefijo, siguiente);
+        ComboBox<String> unidadAltura = new ComboBox<>("Unidad de altura", List.of("METROS", "PIES")); unidadAltura.setValue(configuracion.getUnidadAltura());
+        ComboBox<String> unidadPeso = new ComboBox<>("Unidad de peso", List.of("KG", "LIBRAS")); unidadPeso.setValue(configuracion.getUnidadPeso());
+        ComboBox<String> unidadTemperatura = new ComboBox<>("Unidad de temperatura", List.of("C", "F")); unidadTemperatura.setValue(configuracion.getUnidadTemperatura());
+        FormLayout formulario = new FormLayout(requiereAprobacion, recordatorios, prefijo, siguiente, unidadAltura, unidadPeso, unidadTemperatura);
         formulario.setWidthFull();
         formulario.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1), new FormLayout.ResponsiveStep("620px", 2));
         Button guardar = new Button(VaadinIcon.DISC.create());
@@ -93,7 +97,7 @@ public class ConfiguracionView extends VerticalLayout {
             try {
                 if (empresaId == null) throw new IllegalArgumentException("No se pudo identificar la empresa.");
                 configuracionFase2Service.guardar(empresaId, requiereAprobacion.getValue(), prefijo.getValue(),
-                        siguiente.getValue() == null ? 1 : siguiente.getValue(), recordatorios.getValue());
+                        siguiente.getValue() == null ? 1 : siguiente.getValue(), recordatorios.getValue(), unidadAltura.getValue(), unidadPeso.getValue(), unidadTemperatura.getValue());
                 Notification.show("Preferencias guardadas.", 3000, Notification.Position.BOTTOM_START);
             } catch (IllegalArgumentException exception) {
                 Notification.show(exception.getMessage(), 4000, Notification.Position.MIDDLE);
