@@ -28,6 +28,9 @@ public class SecurityConfig extends VaadinWebSecurity {
                 )
                 .securityContext(context -> context.requireExplicitSave(false));
 
+        // El visor de recetas se carga en un iframe de la misma aplicación.
+        http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
+
         super.configure(http);
         setLoginView(http, LoginView.class);
     }
