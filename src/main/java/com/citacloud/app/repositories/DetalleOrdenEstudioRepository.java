@@ -1,0 +1,1 @@
+package com.citacloud.app.repositories; import com.citacloud.app.models.DetalleOrdenEstudio; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface DetalleOrdenEstudioRepository extends JpaRepository<DetalleOrdenEstudio,UUID>{List<DetalleOrdenEstudio> findByOrdenId(UUID ordenId); void deleteByOrdenId(UUID ordenId);}

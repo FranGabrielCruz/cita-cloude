@@ -1,0 +1,1 @@
+package com.citacloud.app.repositories; import com.citacloud.app.models.Receta; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface RecetaRepository extends JpaRepository<Receta,UUID>{List<Receta> findByEmpresaIdAndPacienteIdOrderByCreadoEnDesc(UUID empresaId,UUID pacienteId); long countByEmpresaId(UUID empresaId);}

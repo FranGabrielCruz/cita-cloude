@@ -1,0 +1,1 @@
+package com.citacloud.app.repositories; import com.citacloud.app.models.OrdenEstudio; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface OrdenEstudioRepository extends JpaRepository<OrdenEstudio,UUID>{List<OrdenEstudio> findByEmpresaIdAndPacienteIdOrderByCreadoEnDesc(UUID empresaId,UUID pacienteId);}

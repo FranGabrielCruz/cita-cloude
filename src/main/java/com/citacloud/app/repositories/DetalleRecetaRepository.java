@@ -1,0 +1,1 @@
+package com.citacloud.app.repositories; import com.citacloud.app.models.DetalleReceta; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface DetalleRecetaRepository extends JpaRepository<DetalleReceta,UUID>{List<DetalleReceta> findByRecetaId(UUID recetaId); void deleteByRecetaId(UUID recetaId);}
