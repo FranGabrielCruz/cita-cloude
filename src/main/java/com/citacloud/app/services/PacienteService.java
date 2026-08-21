@@ -37,10 +37,17 @@ public class PacienteService {
     }
 
     public Paciente guardar(Paciente paciente) {
-        validarDatos(paciente.getDocumento(), paciente.getNombre(), paciente.getApellido(), paciente.getTelefono(), paciente.getEmail());
-        if (pacienteRepository.existsByEmpresaIdAndDocumento(paciente.getEmpresaId(), paciente.getDocumento())) {
-            throw new IllegalArgumentException("La cédula ya existe para esta empresa.");
+        validarDatos(paciente.getTipoDocumento(), paciente.getDocumento(), paciente.getNombre(), paciente.getApellido(), paciente.getTelefono(), paciente.getEmail());
+        if (paciente.getDocumento() != null && pacienteRepository.existsByEmpresaIdAndDocumento(paciente.getEmpresaId(), paciente.getDocumento())) {
+            throw new IllegalArgumentException("El documento ya existe para esta empresa.");
         }
+        paciente.setNumeroExpediente(generarExpediente(paciente.getEmpresaId()));
+        return pacienteRepository.save(paciente);
+    }
+
+    public Paciente actualizarPerfil(UUID empresaId, Paciente datos) {
+        Paciente paciente = pacienteRepository.findByIdAndEmpresaId(datos.getId(), empresaId).orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado para esta empresa."));
+        paciente.setTipoDocumento(datos.getTipoDocumento()); paciente.setFechaNacimiento(datos.getFechaNacimiento()); paciente.setGenero(datos.getGenero()); paciente.setDireccion(datos.getDireccion()); paciente.setNacionalidad(datos.getNacionalidad()); paciente.setProvincia(datos.getProvincia()); paciente.setMunicipio(datos.getMunicipio()); paciente.setTelefonoAlternativo(datos.getTelefonoAlternativo()); paciente.setContactoEmergencia(datos.getContactoEmergencia()); paciente.setTelefonoEmergencia(datos.getTelefonoEmergencia()); paciente.setParentescoEmergencia(datos.getParentescoEmergencia());
         return pacienteRepository.save(paciente);
     }
 
@@ -48,8 +55,8 @@ public class PacienteService {
                                String apellido, String telefono, String email) {
         Paciente paciente = pacienteRepository.findByIdAndEmpresaId(pacienteId, empresaId)
                 .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado para esta empresa."));
-        validarDatos(cedula, nombre, apellido, telefono, email);
-        if (!paciente.getDocumento().equals(cedula)
+        validarDatos(paciente.getTipoDocumento(), cedula, nombre, apellido, telefono, email);
+        if (!java.util.Objects.equals(paciente.getDocumento(), cedula)
                 && pacienteRepository.existsByEmpresaIdAndDocumento(empresaId, cedula)) {
             throw new IllegalArgumentException("La cédula ya existe para esta empresa.");
         }
@@ -75,18 +82,19 @@ public class PacienteService {
         pacienteRepository.save(paciente);
     }
 
-    private void validarDatos(String cedula, String nombre, String apellido, String telefono, String email) {
-        if (cedula == null || cedula.isBlank() || nombre == null || nombre.isBlank() || apellido == null || apellido.isBlank()
-                || telefono == null || telefono.isBlank() || email == null || email.isBlank()) {
+    private String generarExpediente(UUID empresaId) { long siguiente=pacienteRepository.countByEmpresaId(empresaId)+1; String numero; do { numero="HC-"+String.format("%07d",siguiente++); } while(pacienteRepository.existsByEmpresaIdAndNumeroExpediente(empresaId,numero)); return numero; }
+    private void validarDatos(String tipoDocumento, String documento, String nombre, String apellido, String telefono, String email) {
+        if (nombre == null || nombre.isBlank() || apellido == null || apellido.isBlank() || telefono == null || telefono.isBlank()) {
             throw new IllegalArgumentException("Completa todos los campos obligatorios.");
         }
-        if (!CEDULA_VALIDA.matcher(cedula).matches()) {
+        if (!"SIN_DOCUMENTO".equals(tipoDocumento) && (documento == null || documento.isBlank())) throw new IllegalArgumentException("El número de documento es obligatorio.");
+        if ("CEDULA".equals(tipoDocumento) && !CEDULA_VALIDA.matcher(documento).matches()) {
             throw new IllegalArgumentException("La cédula debe tener el formato 000-0000000-0.");
         }
         if (!TELEFONO_VALIDO.matcher(telefono).matches()) {
             throw new IllegalArgumentException("El teléfono debe tener el formato (000) 000-0000.");
         }
-        if (!EMAIL_VALIDO.matcher(email).matches()) {
+        if (email != null && !email.isBlank() && !EMAIL_VALIDO.matcher(email).matches()) {
             throw new IllegalArgumentException("Ingresa un correo electrónico válido.");
         }
     }

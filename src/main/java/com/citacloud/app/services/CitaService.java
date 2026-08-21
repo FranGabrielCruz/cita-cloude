@@ -38,6 +38,7 @@ public class CitaService {
         if (empresaId == null || medicoId == null || fecha == null || inicio == null) return Optional.empty();
         return disponibilidadService.obtenerHoraFinSugerida(empresaId, medicoId, fecha, inicio);
     }
+    public List<java.time.LocalTime> obtenerSlotsDisponibles(UUID empresaId, UUID medicoId, LocalDate fecha, UUID citaExcluida) { return disponibilidadService.obtenerSlotsDisponibles(empresaId, medicoId, fecha, citaExcluida); }
 
     public Cita guardar(Cita cita) {
         return citaRepository.save(cita);
@@ -48,6 +49,13 @@ public class CitaService {
      * autenticada y que el médico no tenga otro turno en el mismo intervalo.
      */
     public Cita registrar(UUID empresaId, Cita cita) {
+        if (cita == null || cita.getFecha() == null || cita.getHoraInicio() == null) {
+            throw new IllegalArgumentException("Completa la fecha y hora de la cita.");
+        }
+        java.time.LocalDate hoy = java.time.LocalDate.now();
+        if (cita.getFecha().isBefore(hoy) || (cita.getFecha().equals(hoy) && !cita.getHoraInicio().isAfter(java.time.LocalTime.now()))) {
+            throw new IllegalArgumentException("No se puede crear una cita en una hora que ya pasó.");
+        }
         validarDatos(empresaId, cita);
         validarDisponibilidad(empresaId, cita, null);
         if (citaRepository.existsByEmpresaIdAndMedicoIdAndFechaAndHoraInicioLessThanAndHoraFinGreaterThan(

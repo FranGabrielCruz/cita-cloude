@@ -18,8 +18,11 @@ public class Paciente {
     @Column(name = "empresa_id", nullable = false)
     private UUID empresaId;
 
-    @Column(nullable = false, length = 50)
+    @Column(length = 50)
     private String documento;
+
+    @Column(name = "numero_expediente", nullable = false, length = 30)
+    private String numeroExpediente;
 
     @Column(name = "tipo_documento", length = 20)
     private String tipoDocumento = "CEDULA";
@@ -45,6 +48,14 @@ public class Paciente {
     @Column(columnDefinition = "TEXT")
     private String direccion;
 
+    private String nacionalidad;
+    private String provincia;
+    private String municipio;
+    @Column(name = "telefono_alternativo") private String telefonoAlternativo;
+    @Column(name = "contacto_emergencia") private String contactoEmergencia;
+    @Column(name = "telefono_emergencia") private String telefonoEmergencia;
+    @Column(name = "parentesco_emergencia") private String parentescoEmergencia;
+
     @Column(nullable = false)
     private Boolean activo = true;
 
@@ -61,6 +72,8 @@ public class Paciente {
 
     public String getDocumento() { return documento; }
     public void setDocumento(String documento) { this.documento = documento; }
+    public String getNumeroExpediente() { return numeroExpediente; }
+    public void setNumeroExpediente(String numeroExpediente) { this.numeroExpediente = numeroExpediente; }
 
     public String getTipoDocumento() { return tipoDocumento; }
     public void setTipoDocumento(String tipoDocumento) { this.tipoDocumento = tipoDocumento; }
@@ -87,6 +100,13 @@ public class Paciente {
 
     public String getDireccion() { return direccion; }
     public void setDireccion(String direccion) { this.direccion = direccion; }
+    public String getNacionalidad() { return nacionalidad; } public void setNacionalidad(String value) { nacionalidad=value; }
+    public String getProvincia() { return provincia; } public void setProvincia(String value) { provincia=value; }
+    public String getMunicipio() { return municipio; } public void setMunicipio(String value) { municipio=value; }
+    public String getTelefonoAlternativo() { return telefonoAlternativo; } public void setTelefonoAlternativo(String value) { telefonoAlternativo=value; }
+    public String getContactoEmergencia() { return contactoEmergencia; } public void setContactoEmergencia(String value) { contactoEmergencia=value; }
+    public String getTelefonoEmergencia() { return telefonoEmergencia; } public void setTelefonoEmergencia(String value) { telefonoEmergencia=value; }
+    public String getParentescoEmergencia() { return parentescoEmergencia; } public void setParentescoEmergencia(String value) { parentescoEmergencia=value; }
 
     public Boolean getActivo() { return activo; }
     public void setActivo(Boolean activo) { this.activo = activo; }

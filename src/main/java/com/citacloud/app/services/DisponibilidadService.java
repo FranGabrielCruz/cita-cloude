@@ -37,7 +37,8 @@ public class DisponibilidadService {
             LocalTime slot = horario.getHoraInicio();
             while (!slot.plusMinutes(horario.getDuracionCitaMinutos()).isAfter(horario.getHoraFin())) {
                 LocalTime finSlot = slot.plusMinutes(horario.getDuracionCitaMinutos());
-                if (!enDescanso(descansos, slot, finSlot) && !enAusencia(empresaId, medicoId, fecha, slot, finSlot)
+                boolean horarioPasado = fecha.equals(LocalDate.now()) && !slot.isAfter(LocalTime.now());
+                if (!horarioPasado && !enDescanso(descansos, slot, finSlot) && !enAusencia(empresaId, medicoId, fecha, slot, finSlot)
                         && !ocupado(empresaId, medicoId, fecha, slot, finSlot, citaExcluida)) disponibles.add(slot);
                 slot = finSlot;
             }

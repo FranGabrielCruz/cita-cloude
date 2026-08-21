@@ -4,6 +4,13 @@ spring:
   profiles:
     # Facilita la ejecución desde IntelliJ. Staging y producción siguen siendo explícitos.
     default: local
+  datasource:
+    # Permite iniciar localmente aun cuando el IDE no active el perfil local.
+    # Las credenciales reales siguen llegando únicamente por variables de entorno.
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/cita_cloud}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: validate

@@ -16,6 +16,7 @@ public interface PacienteRepository extends JpaRepository<Paciente, UUID> {
     List<Paciente> findByEmpresaIdAndActivoTrue(UUID empresaId);
     Optional<Paciente> findByIdAndEmpresaId(UUID id, UUID empresaId);
     boolean existsByEmpresaIdAndDocumento(UUID empresaId, String documento);
+    boolean existsByEmpresaIdAndNumeroExpediente(UUID empresaId, String numeroExpediente);
     long countByEmpresaId(UUID empresaId);
 
     @Query("SELECT p FROM Paciente p WHERE p.empresaId = :empresaId AND " +

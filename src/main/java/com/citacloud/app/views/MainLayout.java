@@ -28,7 +28,8 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 
 public class MainLayout extends AppLayout {
 
-    private static final String ESPACIO_FOOTER = "7.5rem";
+    // Reserva suficiente espacio para que las vistas largas y sus paginadores no queden bajo el pie fijo.
+    private static final String ESPACIO_FOOTER = "12rem";
     private static final String MODO_OSCURO = "citacloud.modoOscuro";
     private final EmpresaService empresaService;
     private final UsuarioService usuarioService;
@@ -281,9 +282,7 @@ public class MainLayout extends AppLayout {
         SideNavItem operacionClinica = new SideNavItem("OPERACIÓN CLÍNICA");
         operacionClinica.addClassName("sidebar-section");
         nav.addItem(operacionClinica);
-        nav.addItem(new SideNavItem("Aprobación de citas", "aprobacion-citas", VaadinIcon.CHECK_CIRCLE.create()));
-        nav.addItem(new SideNavItem("Check-in", "check-in", VaadinIcon.SIGN_IN.create()));
-        nav.addItem(new SideNavItem("Sala de espera", "sala-espera", VaadinIcon.USERS.create()));
+        nav.addItem(new SideNavItem("Recepción", "recepcion", VaadinIcon.DESKTOP.create()));
         nav.addItem(new SideNavItem("Consulta médica", "consulta-medica", VaadinIcon.STETHOSCOPE.create()));
         nav.addItem(new SideNavItem("Expediente clínico", "historial-clinico", VaadinIcon.CLIPBOARD_HEART.create()));
         nav.addItem(new SideNavItem("Notificaciones", "recordatorios", VaadinIcon.BELL.create()));
@@ -325,12 +324,20 @@ public class MainLayout extends AppLayout {
                         || "ROLE_SUPERADMIN".equals(authority.getAuthority()));
         String[] permisos = {"MENU_DASHBOARD", null, "MENU_MI_AGENDA", "MENU_CITAS", "MENU_PACIENTES", "MENU_MEDICOS",
                 "MENU_ESPECIALIDADES", "MENU_HORARIOS", "MENU_CONSULTORIOS", "MENU_SEGUROS", null,
-                "MENU_USUARIOS", "MENU_ROLES", null, "MENU_APROBACION_CITAS", "MENU_CHECKIN", "MENU_SALA_ESPERA", "MENU_SIGNOS_VITALES", "MENU_CONSULTA_MEDICA", "MENU_EXPEDIENTE_CLINICO", "MENU_ANTECEDENTES", "MENU_ALERGIAS", "MENU_DIAGNOSTICOS", "MENU_TRATAMIENTOS", "MENU_RECETAS", "MENU_ORDENES_ESTUDIOS", "MENU_RECORDATORIOS",
+                "MENU_USUARIOS", "MENU_ROLES", null, null, "MENU_SIGNOS_VITALES", "MENU_CONSULTA_MEDICA", "MENU_EXPEDIENTE_CLINICO", "MENU_ANTECEDENTES", "MENU_ALERGIAS", "MENU_DIAGNOSTICOS", "MENU_TRATAMIENTOS", "MENU_RECETAS", "MENU_ORDENES_ESTUDIOS", "MENU_RECORDATORIOS",
                 "MENU_DOCUMENTOS", null, "MENU_FACTURACION", "MENU_ECF", "MENU_CAJA", "MENU_PAGOS", "MENU_CUENTAS_COBRAR", "MENU_ARS", "MENU_INVENTARIO", "MENU_FARMACIA", "MENU_LABORATORIO", "MENU_REPORTES_FINANCIEROS", null, "MENU_REPORTES", "MENU_AUDITORIA", null};
         var elementos = nav.getElement().getChildren().toList();
+        boolean puedeAccederRecepcion = esAdministrador || usuario.getAuthorities().stream()
+                .anyMatch(authority -> "MENU_APROBACION_CITAS".equals(authority.getAuthority())
+                        || "MENU_CHECKIN".equals(authority.getAuthority())
+                        || "MENU_SALA_ESPERA".equals(authority.getAuthority()));
         for (int indice = 0; indice < elementos.size() && indice < permisos.length; indice++) {
             String permiso = permisos[indice];
-            if (permiso == null) continue;
+            if (permiso == null) {
+                // Recepción agrupa los tres permisos operativos que antes tenían menú propio.
+                if (indice == 14) elementos.get(indice).setVisible(puedeAccederRecepcion);
+                continue;
+            }
             boolean permitido = esAdministrador || usuario.getAuthorities().stream()
                     .anyMatch(authority -> permiso.equals(authority.getAuthority()));
             elementos.get(indice).setVisible(permitido);

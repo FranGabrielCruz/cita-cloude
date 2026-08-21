@@ -25,6 +25,8 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.textfield.EmailField;
+import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
@@ -141,11 +143,22 @@ public class PacientesView extends VerticalLayout {
         boolean esEdicion = pacienteExistente != null;
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle(esEdicion ? "Editar Paciente" : "Registrar Nuevo Paciente");
-        TextField cedula = new TextField("Cédula");
+        ComboBox<String> tipoDocumento = new ComboBox<>("Tipo de documento", "CEDULA", "PASAPORTE", "OTRO", "SIN_DOCUMENTO");
+        TextField cedula = new TextField("Número de documento");
         TextField nombre = new TextField("Nombre");
         TextField apellido = new TextField("Apellido");
+        DatePicker nacimiento = new DatePicker("Fecha de nacimiento");
+        ComboBox<String> sexo = new ComboBox<>("Sexo", "MASCULINO", "FEMENINO", "OTRO");
         TextField telefono = new TextField("Teléfono");
         EmailField email = new EmailField("Email");
+        TextArea direccion = new TextArea("Dirección");
+        TextField nacionalidad = new TextField("Nacionalidad");
+        ComboBox<String> provincia = new ComboBox<>("Provincia", "Distrito Nacional", "Santo Domingo", "Santiago", "La Altagracia", "Otra");
+        TextField municipio = new TextField("Municipio");
+        TextField telefonoAlternativo = new TextField("Teléfono alternativo");
+        TextField contactoEmergencia = new TextField("Contacto de emergencia");
+        TextField telefonoEmergencia = new TextField("Teléfono de emergencia");
+        ComboBox<String> parentesco = new ComboBox<>("Parentesco", "Madre", "Padre", "Esposo/a", "Hijo/a", "Hermano/a", "Otro");
         ComboBox<Aseguradora> seguro = new ComboBox<>("Seguro");
         TextField numeroPoliza = new TextField("N\u00famero de p\u00f3liza");
         cedula.setPlaceholder("000-0000000-0");
@@ -156,15 +169,16 @@ public class PacientesView extends VerticalLayout {
         seguro.setClearButtonVisible(true);
         seguro.setItems(aseguradoraService.listarActivas(empresaId));
         numeroPoliza.setPlaceholder("Ingrese el n\u00famero de p\u00f3liza");
-        cedula.setRequiredIndicatorVisible(true);
+        tipoDocumento.setValue("CEDULA");
         nombre.setRequiredIndicatorVisible(true);
         apellido.setRequiredIndicatorVisible(true);
         telefono.setRequiredIndicatorVisible(true);
-        email.setRequiredIndicatorVisible(true);
+        nacimiento.setRequiredIndicatorVisible(true); sexo.setRequiredIndicatorVisible(true);
         cedula.addBlurListener(event -> cedula.setValue(formatearCedula(cedula.getValue())));
         telefono.addBlurListener(event -> telefono.setValue(formatearTelefono(telefono.getValue())));
         if (esEdicion) {
-            cedula.setValue(pacienteExistente.getDocumento());
+            cedula.setValue(pacienteExistente.getDocumento() == null ? "" : pacienteExistente.getDocumento());
+            tipoDocumento.setValue(pacienteExistente.getTipoDocumento() == null ? "CEDULA" : pacienteExistente.getTipoDocumento()); nacimiento.setValue(pacienteExistente.getFechaNacimiento()); if(pacienteExistente.getGenero()!=null) sexo.setValue(pacienteExistente.getGenero()); direccion.setValue(pacienteExistente.getDireccion()==null?"":pacienteExistente.getDireccion()); nacionalidad.setValue(pacienteExistente.getNacionalidad()==null?"":pacienteExistente.getNacionalidad()); if(pacienteExistente.getProvincia()!=null) provincia.setValue(pacienteExistente.getProvincia()); municipio.setValue(pacienteExistente.getMunicipio()==null?"":pacienteExistente.getMunicipio()); telefonoAlternativo.setValue(pacienteExistente.getTelefonoAlternativo()==null?"":pacienteExistente.getTelefonoAlternativo()); contactoEmergencia.setValue(pacienteExistente.getContactoEmergencia()==null?"":pacienteExistente.getContactoEmergencia()); telefonoEmergencia.setValue(pacienteExistente.getTelefonoEmergencia()==null?"":pacienteExistente.getTelefonoEmergencia()); if(pacienteExistente.getParentescoEmergencia()!=null) parentesco.setValue(pacienteExistente.getParentescoEmergencia());
             nombre.setValue(pacienteExistente.getNombre());
             apellido.setValue(pacienteExistente.getApellido());
             telefono.setValue(pacienteExistente.getTelefono() == null ? "" : pacienteExistente.getTelefono());
@@ -174,7 +188,8 @@ public class PacientesView extends VerticalLayout {
             seguroPacienteService.obtenerActivo(empresaId, pacienteExistente.getId())
                     .ifPresent(seguroPaciente -> numeroPoliza.setValue(seguroPaciente.getNumeroPoliza()));
         }
-        dialog.add(new FormLayout(cedula, nombre, apellido, telefono, email, seguro, numeroPoliza));
+        tipoDocumento.addValueChangeListener(e -> { boolean sin="SIN_DOCUMENTO".equals(e.getValue()); cedula.setVisible(!sin); if(sin)cedula.clear(); });
+        FormLayout formulario=new FormLayout(); formulario.setResponsiveSteps(new FormLayout.ResponsiveStep("0",1),new FormLayout.ResponsiveStep("720px",2),new FormLayout.ResponsiveStep("1080px",3)); H2 personales=new H2("Datos personales"),contacto=new H2("Contacto"),emergencia=new H2("Contacto de emergencia"),medico=new H2("Seguro médico"); formulario.add(personales,nombre,apellido,nacimiento,sexo,tipoDocumento,cedula,contacto,telefono,telefonoAlternativo,email,direccion,nacionalidad,provincia,municipio,emergencia,contactoEmergencia,parentesco,telefonoEmergencia,medico,seguro,numeroPoliza); formulario.setColspan(personales,3);formulario.setColspan(contacto,3);formulario.setColspan(emergencia,3);formulario.setColspan(medico,3);formulario.setColspan(direccion,3); dialog.setWidth("min(1100px,96vw)");dialog.add(formulario);
 
         Button cerrar = new Button(VaadinIcon.CLOSE.create(), e -> dialog.close());
         cerrar.setTooltipText("Cerrar");
@@ -182,7 +197,7 @@ public class PacientesView extends VerticalLayout {
         Button guardar = new Button(VaadinIcon.DISC.create(), e -> {
             cedula.setValue(formatearCedula(cedula.getValue()));
             telefono.setValue(formatearTelefono(telefono.getValue()));
-            if (!validarFormulario(cedula, nombre, apellido, telefono, email)) {
+            if (!"SIN_DOCUMENTO".equals(tipoDocumento.getValue()) && !validarFormulario(cedula, nombre, apellido, telefono, email)) {
                 return;
             }
             if (seguro.getValue() != null && numeroPoliza.isEmpty()) {
@@ -196,10 +211,12 @@ public class PacientesView extends VerticalLayout {
                 if (esEdicion) {
                     pacienteGuardado = pacienteService.actualizar(empresaId, pacienteExistente.getId(), cedula.getValue(), nombre.getValue(),
                             apellido.getValue(), telefono.getValue(), email.getValue());
+                    pacienteGuardado.setTipoDocumento(tipoDocumento.getValue()); pacienteGuardado.setFechaNacimiento(nacimiento.getValue()); pacienteGuardado.setGenero(sexo.getValue()); pacienteGuardado.setDireccion(direccion.getValue()); pacienteGuardado.setNacionalidad(nacionalidad.getValue()); pacienteGuardado.setProvincia(provincia.getValue()); pacienteGuardado.setMunicipio(municipio.getValue()); pacienteGuardado.setTelefonoAlternativo(telefonoAlternativo.getValue()); pacienteGuardado.setContactoEmergencia(contactoEmergencia.getValue()); pacienteGuardado.setTelefonoEmergencia(telefonoEmergencia.getValue()); pacienteGuardado.setParentescoEmergencia(parentesco.getValue());
+                    pacienteGuardado = pacienteService.actualizarPerfil(empresaId, pacienteGuardado);
                 } else {
                     Paciente paciente = new Paciente();
                     paciente.setEmpresaId(empresaId);
-                    paciente.setDocumento(cedula.getValue());
+                    paciente.setDocumento("SIN_DOCUMENTO".equals(tipoDocumento.getValue())?null:cedula.getValue()); paciente.setTipoDocumento(tipoDocumento.getValue()); paciente.setFechaNacimiento(nacimiento.getValue()); paciente.setGenero(sexo.getValue()); paciente.setDireccion(direccion.getValue()); paciente.setNacionalidad(nacionalidad.getValue()); paciente.setProvincia(provincia.getValue()); paciente.setMunicipio(municipio.getValue()); paciente.setTelefonoAlternativo(telefonoAlternativo.getValue()); paciente.setContactoEmergencia(contactoEmergencia.getValue()); paciente.setTelefonoEmergencia(telefonoEmergencia.getValue()); paciente.setParentescoEmergencia(parentesco.getValue());
                     paciente.setNombre(nombre.getValue());
                     paciente.setApellido(apellido.getValue());
                     paciente.setTelefono(telefono.getValue());

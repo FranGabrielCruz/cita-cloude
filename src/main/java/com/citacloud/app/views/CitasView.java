@@ -13,6 +13,7 @@ import com.citacloud.app.services.MedicoService;
 import com.citacloud.app.services.PacienteService;
 import com.citacloud.app.services.SucursalService;
 import com.citacloud.app.views.components.PaginadorTabla;
+import com.citacloud.app.views.components.SelectorHorariosDisponibles;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.UI;
@@ -224,10 +225,7 @@ public class CitasView extends VerticalLayout {
         ComboBox<Consultorio> consultorio = selector("Consultorio", consultorioService.listarActivos(empresaId), Consultorio::getNombre);
         DatePicker fecha = new DatePicker("Fecha");
         fecha.setValue(LocalDate.now());
-        TimePicker horaInicio = new TimePicker("Hora de inicio");
-        horaInicio.setValue(LocalTime.of(8, 0));
-        TimePicker horaFin = new TimePicker("Hora de finalizacion");
-        horaFin.setValue(LocalTime.of(8, 30));
+        SelectorHorariosDisponibles horarios = new SelectorHorariosDisponibles(citaService, empresaId);
         TextArea motivo = new TextArea("Motivo");
         motivo.setMaxLength(500);
         motivo.setWidthFull();
@@ -240,9 +238,8 @@ public class CitasView extends VerticalLayout {
                     .filter(c -> seleccionada.getId().equals(c.getSucursal().getId())).toList());
             consultorio.clear();
         });
-        medico.addValueChangeListener(event -> sugerirHoraFin(medico, fecha, horaInicio, horaFin));
-        fecha.addValueChangeListener(event -> sugerirHoraFin(medico, fecha, horaInicio, horaFin));
-        horaInicio.addValueChangeListener(event -> sugerirHoraFin(medico, fecha, horaInicio, horaFin));
+        medico.addValueChangeListener(event -> horarios.actualizar(event.getValue()==null?null:event.getValue().getId(), fecha.getValue(), esEdicion?citaExistente.getId():null));
+        fecha.addValueChangeListener(event -> horarios.actualizar(medico.getValue()==null?null:medico.getValue().getId(), event.getValue(), esEdicion?citaExistente.getId():null));
 
         if (esEdicion) {
             paciente.setValue(citaExistente.getPaciente());
@@ -250,8 +247,7 @@ public class CitasView extends VerticalLayout {
             sucursal.setValue(citaExistente.getSucursal());
             consultorio.setValue(citaExistente.getConsultorio());
             fecha.setValue(citaExistente.getFecha());
-            horaInicio.setValue(citaExistente.getHoraInicio());
-            horaFin.setValue(citaExistente.getHoraFin());
+            horarios.actualizar(citaExistente.getMedico().getId(), citaExistente.getFecha(), citaExistente.getId());
             motivo.setValue(citaExistente.getMotivo() == null ? "" : citaExistente.getMotivo());
             estado.setItems(estadosEditables(citaExistente));
             estado.setValue(citaExistente.getEstado());
@@ -260,7 +256,7 @@ public class CitasView extends VerticalLayout {
         }
 
         // Dos columnas en computadora y una columna en pantallas peque\u00f1as.
-        FormLayout formulario = new FormLayout(paciente, medico, sucursal, consultorio, fecha, horaInicio, horaFin, motivo, estado);
+        FormLayout formulario = new FormLayout(paciente, medico, sucursal, consultorio, fecha, horarios, motivo, estado);
         formulario.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1), new FormLayout.ResponsiveStep("620px", 2));
         formulario.setColspan(motivo, 2);
         formulario.setColspan(estado, 2);
@@ -276,8 +272,8 @@ public class CitasView extends VerticalLayout {
                 cita.setSucursal(sucursal.getValue());
                 cita.setConsultorio(consultorio.getValue());
                 cita.setFecha(fecha.getValue());
-                cita.setHoraInicio(horaInicio.getValue());
-                cita.setHoraFin(horaFin.getValue());
+                cita.setHoraInicio(horarios.getInicio());
+                cita.setHoraFin(horarios.getFin());
                 cita.setMotivo(motivo.getValue());
                 if (esEdicion) {
                     citaService.actualizar(empresaId, cita);
