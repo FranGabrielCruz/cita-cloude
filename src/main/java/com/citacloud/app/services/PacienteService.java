@@ -16,9 +16,11 @@ public class PacienteService {
     private static final Pattern EMAIL_VALIDO = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
     private final PacienteRepository pacienteRepository;
+    private final AuditoriaService auditoria;
 
-    public PacienteService(PacienteRepository pacienteRepository) {
+    public PacienteService(PacienteRepository pacienteRepository, AuditoriaService auditoria) {
         this.pacienteRepository = pacienteRepository;
+        this.auditoria = auditoria;
     }
 
     public List<Paciente> listarPorEmpresa(UUID empresaId) {
@@ -42,13 +44,15 @@ public class PacienteService {
             throw new IllegalArgumentException("El documento ya existe para esta empresa.");
         }
         paciente.setNumeroExpediente(generarExpediente(paciente.getEmpresaId()));
-        return pacienteRepository.save(paciente);
+        Paciente guardado = pacienteRepository.save(paciente);
+        auditoria.registrar(guardado.getEmpresaId(), null, "PACIENTES", "PATIENT_CREATED", "PACIENTE", guardado.getId(), guardado.getNumeroExpediente(), guardado.getId(), List.of(), "SUCCESS", null, false);
+        return guardado;
     }
 
     public Paciente actualizarPerfil(UUID empresaId, Paciente datos) {
         Paciente paciente = pacienteRepository.findByIdAndEmpresaId(datos.getId(), empresaId).orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado para esta empresa."));
         paciente.setTipoDocumento(datos.getTipoDocumento()); paciente.setFechaNacimiento(datos.getFechaNacimiento()); paciente.setGenero(datos.getGenero()); paciente.setDireccion(datos.getDireccion()); paciente.setNacionalidad(datos.getNacionalidad()); paciente.setProvincia(datos.getProvincia()); paciente.setMunicipio(datos.getMunicipio()); paciente.setTelefonoAlternativo(datos.getTelefonoAlternativo()); paciente.setContactoEmergencia(datos.getContactoEmergencia()); paciente.setTelefonoEmergencia(datos.getTelefonoEmergencia()); paciente.setParentescoEmergencia(datos.getParentescoEmergencia());
-        return pacienteRepository.save(paciente);
+        return guardarPerfilAuditado(paciente, empresaId);
     }
 
     public Paciente actualizar(UUID empresaId, UUID pacienteId, String cedula, String nombre,
@@ -60,12 +64,15 @@ public class PacienteService {
                 && pacienteRepository.existsByEmpresaIdAndDocumento(empresaId, cedula)) {
             throw new IllegalArgumentException("La cédula ya existe para esta empresa.");
         }
+        String documentoAnterior=paciente.getDocumento(), nombreAnterior=paciente.getNombre(), apellidoAnterior=paciente.getApellido(), telefonoAnterior=paciente.getTelefono(), emailAnterior=paciente.getEmail();
         paciente.setDocumento(cedula);
         paciente.setNombre(nombre);
         paciente.setApellido(apellido);
         paciente.setTelefono(telefono);
         paciente.setEmail(email);
-        return pacienteRepository.save(paciente);
+        Paciente guardado=pacienteRepository.save(paciente);
+        auditoria.registrar(empresaId,null,"PACIENTES","PATIENT_UPDATED","PACIENTE",pacienteId,guardado.getNumeroExpediente(),pacienteId,List.of(new AuditoriaService.Cambio("documento",documentoAnterior,cedula),new AuditoriaService.Cambio("nombre",nombreAnterior,nombre),new AuditoriaService.Cambio("apellido",apellidoAnterior,apellido),new AuditoriaService.Cambio("telefono",telefonoAnterior,telefono),new AuditoriaService.Cambio("email",emailAnterior,email)),"SUCCESS",null,false);
+        return guardado;
     }
 
     public void desactivar(UUID empresaId, UUID pacienteId) {
@@ -73,6 +80,7 @@ public class PacienteService {
                 .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado para esta empresa."));
         paciente.setActivo(false);
         pacienteRepository.save(paciente);
+        auditoria.registrar(empresaId,null,"PACIENTES","PATIENT_ARCHIVED","PACIENTE",pacienteId,paciente.getNumeroExpediente(),pacienteId,List.of(new AuditoriaService.Cambio("estado","ACTIVO","ARCHIVADO")),"SUCCESS",null,false);
     }
 
     public void activar(UUID empresaId, UUID pacienteId) {
@@ -83,6 +91,7 @@ public class PacienteService {
     }
 
     private String generarExpediente(UUID empresaId) { long siguiente=pacienteRepository.countByEmpresaId(empresaId)+1; String numero; do { numero="HC-"+String.format("%07d",siguiente++); } while(pacienteRepository.existsByEmpresaIdAndNumeroExpediente(empresaId,numero)); return numero; }
+    private Paciente guardarPerfilAuditado(Paciente paciente, UUID empresaId) { Paciente guardado=pacienteRepository.save(paciente); auditoria.registrar(empresaId,null,"PACIENTES","PATIENT_UPDATED","PACIENTE",guardado.getId(),guardado.getNumeroExpediente(),guardado.getId(),List.of(),"SUCCESS",null,false); return guardado; }
     private void validarDatos(String tipoDocumento, String documento, String nombre, String apellido, String telefono, String email) {
         if (nombre == null || nombre.isBlank() || apellido == null || apellido.isBlank() || telefono == null || telefono.isBlank()) {
             throw new IllegalArgumentException("Completa todos los campos obligatorios.");

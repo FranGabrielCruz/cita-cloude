@@ -18,14 +18,16 @@ public class CitaService {
     private final MedicoRepository medicoRepository;
     private final ConfiguracionFase2Service configuracionFase2Service;
     private final NotificacionService notificaciones;
+    private final AuditoriaService auditoria;
 
     public CitaService(CitaRepository citaRepository, DisponibilidadService disponibilidadService,
-                       MedicoRepository medicoRepository, ConfiguracionFase2Service configuracionFase2Service, NotificacionService notificaciones) {
+                       MedicoRepository medicoRepository, ConfiguracionFase2Service configuracionFase2Service, NotificacionService notificaciones, AuditoriaService auditoria) {
         this.citaRepository = citaRepository;
         this.disponibilidadService = disponibilidadService;
         this.medicoRepository = medicoRepository;
         this.configuracionFase2Service = configuracionFase2Service;
         this.notificaciones = notificaciones;
+        this.auditoria = auditoria;
     }
 
     public List<Cita> listarPorEmpresa(UUID empresaId) {
@@ -69,6 +71,7 @@ public class CitaService {
         boolean requiereAprobacion = configuracionFase2Service.obtener(empresaId).isRequiereAprobacionCitas();
         cita.setEstado(requiereAprobacion ? "PENDIENTE" : "CONFIRMADA");
         Cita guardada = citaRepository.save(cita);
+        auditoria.registrar(empresaId,null,"CITAS","APPOINTMENT_CREATED","CITA",guardada.getId(),"CIT-"+guardada.getId().toString().substring(0,8),guardada.getPaciente().getId(),List.of(),"SUCCESS",null,false);
         if (requiereAprobacion) {
             notificaciones.crearEmpresa(empresaId, "CITA_PENDIENTE", "CITAS",
                     "Cita pendiente de aprobación", guardada.getPaciente().getNombreCompleto()
@@ -97,7 +100,9 @@ public class CitaService {
         if (tieneConflicto) {
             throw new IllegalArgumentException("El médico ya tiene una cita en ese horario.");
         }
-        return citaRepository.save(cita);
+        Cita guardada=citaRepository.save(cita);
+        auditoria.registrar(empresaId,null,"CITAS","APPOINTMENT_RESCHEDULED","CITA",guardada.getId(),"CIT-"+guardada.getId().toString().substring(0,8),guardada.getPaciente().getId(),List.of(),"SUCCESS",null,false);
+        return guardada;
     }
 
     private void validarDisponibilidad(UUID empresaId, Cita cita, UUID citaExcluida) {
@@ -142,6 +147,7 @@ public class CitaService {
         }
         cita.setEstado("CANCELADA");
         citaRepository.save(cita);
+        auditoria.registrar(empresaId,null,"CITAS","APPOINTMENT_CANCELLED","CITA",cita.getId(),"CIT-"+cita.getId().toString().substring(0,8),cita.getPaciente().getId(),List.of(new AuditoriaService.Cambio("estado","ACTIVA","CANCELADA")),"SUCCESS",null,false);
         notificaciones.crearEmpresa(empresaId, "CITA_CANCELADA", "CITAS", "Cita cancelada",
                 cita.getPaciente().getNombreCompleto() + " · " + cita.getFecha(), "CITA", cita.getId());
     }
@@ -157,6 +163,7 @@ public class CitaService {
         validarDisponibilidad(empresaId, cita, cita.getId());
         cita.setEstado("CONFIRMADA");
         citaRepository.save(cita);
+        auditoria.registrar(empresaId,null,"CITAS","APPOINTMENT_APPROVED","CITA",cita.getId(),"CIT-"+cita.getId().toString().substring(0,8),cita.getPaciente().getId(),List.of(new AuditoriaService.Cambio("estado","PENDIENTE","CONFIRMADA")),"SUCCESS",null,false);
         notificaciones.crearEmpresa(empresaId, "CITA_APROBADA", "CITAS", "Cita aprobada",
                 cita.getPaciente().getNombreCompleto() + " · " + cita.getFecha(), "CITA", cita.getId());
     }

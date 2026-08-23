@@ -33,7 +33,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 public class MainLayout extends AppLayout {
 
     // Reserva suficiente espacio para que las vistas largas y sus paginadores no queden bajo el pie fijo.
-    private static final String ESPACIO_FOOTER = "12rem";
+    private static final String ESPACIO_FOOTER = "4.5rem";
     private static final String MODO_OSCURO = "citacloud.modoOscuro";
     private final EmpresaService empresaService;
     private final UsuarioService usuarioService;
@@ -283,8 +283,7 @@ public class MainLayout extends AppLayout {
                 .set("right", "0")
                 .set("bottom", "0")
                 .set("min-height", "2.75rem")
-                // El contenido nunca debe quedar por encima del pie fijo.
-                // Los menús y diálogos deben abrirse sobre el pie fijo.
+                // El contenido reserva altura inferior antes de este pie fijo.
                 .set("z-index", "1")
                 .set("padding", "0.55rem 1.5rem")
                 .set("background-color", "#ffffff")
@@ -351,7 +350,7 @@ public class MainLayout extends AppLayout {
         SideNavItem gestionControl = new SideNavItem("GESTIÓN Y CONTROL");
         gestionControl.addClassName("sidebar-section");
         nav.addItem(gestionControl);
-        nav.addItem(new SideNavItem("Reportes", "reportes", VaadinIcon.CHART.create()));
+        nav.addItem(new SideNavItem("Gestión y Control", "reportes/gestion-control", VaadinIcon.TRENDING_UP.create()));
         nav.addItem(new SideNavItem("Auditoría", "auditoria", VaadinIcon.EYE.create()));
         SideNavItem empresas = new SideNavItem("Empresas", "empresas", VaadinIcon.BUILDING.create());
         TenantUserDetails usuario = AuthService.getAuthenticatedUser();
@@ -375,7 +374,7 @@ public class MainLayout extends AppLayout {
         String[] permisos = {"MENU_DASHBOARD", null, "MENU_MI_AGENDA", "MENU_CITAS", "MENU_PACIENTES", "MENU_MEDICOS",
                 "MENU_ESPECIALIDADES", "MENU_HORARIOS", "MENU_CONSULTORIOS", "MENU_SEGUROS", null,
                 "MENU_USUARIOS", "MENU_ROLES", null, null, "MENU_SIGNOS_VITALES", "MENU_CONSULTA_MEDICA", "MENU_EXPEDIENTE_CLINICO", "MENU_ANTECEDENTES", "MENU_ALERGIAS", "MENU_DIAGNOSTICOS", "MENU_TRATAMIENTOS", "MENU_RECETAS", "MENU_ORDENES_ESTUDIOS", "MENU_RECORDATORIOS",
-                "MENU_DOCUMENTOS", null, "MENU_FACTURACION", "MENU_ECF", "MENU_CAJA", "MENU_PAGOS", "MENU_CUENTAS_COBRAR", "MENU_ARS", "MENU_INVENTARIO", "MENU_FARMACIA", "MENU_LABORATORIO", "MENU_REPORTES_FINANCIEROS", null, "MENU_REPORTES", "MENU_AUDITORIA", null};
+                "MENU_DOCUMENTOS", null, "MENU_FACTURACION", "MENU_ECF", "MENU_CAJA", "MENU_PAGOS", "MENU_CUENTAS_COBRAR", "MENU_ARS", "MENU_INVENTARIO", "MENU_FARMACIA", "MENU_LABORATORIO", "MENU_REPORTES_FINANCIEROS", null, "MENU_REPORTES", "MENU_GESTION_CONTROL", "MENU_AUDITORIA", null};
         var elementos = nav.getElement().getChildren().toList();
         boolean puedeAccederRecepcion = esAdministrador || usuario.getAuthorities().stream()
                 .anyMatch(authority -> "MENU_APROBACION_CITAS".equals(authority.getAuthority())
