@@ -3,6 +3,8 @@ package com.citacloud.app.views;
 import com.citacloud.app.security.AuthService;
 import com.citacloud.app.security.TenantUserDetails;
 import com.citacloud.app.services.EmpresaService;
+import com.citacloud.app.services.NotificacionBroadcaster;
+import com.citacloud.app.services.NotificacionService;
 import com.citacloud.app.services.UsuarioService;
 import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.UI;
@@ -17,12 +19,14 @@ import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.server.VaadinSession;
+import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.theme.lumo.Lumo;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 
@@ -33,16 +37,25 @@ public class MainLayout extends AppLayout {
     private static final String MODO_OSCURO = "citacloud.modoOscuro";
     private final EmpresaService empresaService;
     private final UsuarioService usuarioService;
+    private final NotificacionService notificacionService;
+    private final NotificacionBroadcaster notificacionBroadcaster;
+    private Button campana;
+    private Registration suscripcionNotificaciones;
 
-    public MainLayout(EmpresaService empresaService, UsuarioService usuarioService) {
+    public MainLayout(EmpresaService empresaService, UsuarioService usuarioService, NotificacionService notificacionService,
+                      NotificacionBroadcaster notificacionBroadcaster) {
         this.empresaService = empresaService;
         this.usuarioService = usuarioService;
+        this.notificacionService = notificacionService;
+        this.notificacionBroadcaster = notificacionBroadcaster;
         aplicarModoOscuroGuardado();
         getElement().executeJs("const oscuro = localStorage.getItem('citacloud.modoOscuro') === 'true'; this.$server.sincronizarModoOscuro(oscuro);");
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
         addHeaderContent();
         addBodyFooter();
+        addAttachListener(evento -> suscribirNotificaciones(evento.getUI()));
+        addDetachListener(evento -> cancelarSuscripcionNotificaciones());
     }
 
     private void addHeaderContent() {
@@ -107,7 +120,13 @@ public class MainLayout extends AppLayout {
             UI.getCurrent().getPage().setLocation("login");
         });
 
-        HorizontalLayout headerRight = new HorizontalLayout(userMenu);
+        long sinLeer = user == null ? 0 : notificacionService.sinLeer(user.getEmpresaId(), user.getUsuarioId());
+        campana = new Button(VaadinIcon.BELL.create());
+        actualizarCampana(user, sinLeer);
+        campana.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        campana.addClickListener(e -> UI.getCurrent().navigate("recordatorios"));
+
+        HorizontalLayout headerRight = new HorizontalLayout(campana, userMenu);
         headerRight.setAlignItems(FlexComponent.Alignment.CENTER);
         headerRight.setSpacing(true);
 
@@ -123,6 +142,34 @@ public class MainLayout extends AppLayout {
 
         // En pantallas t\u00e1ctiles el encabezado debe mantenerse arriba, no al pie.
         addToNavbar(false, header);
+    }
+
+    private void suscribirNotificaciones(UI ui) {
+        TenantUserDetails usuario = AuthService.getAuthenticatedUser();
+        if (usuario == null) return;
+        cancelarSuscripcionNotificaciones();
+        suscripcionNotificaciones = notificacionBroadcaster.suscribir(usuario.getEmpresaId(), () -> ui.access(() -> {
+            long sinLeer = notificacionService.sinLeer(usuario.getEmpresaId(), usuario.getUsuarioId());
+            actualizarCampana(usuario, sinLeer);
+            if (sinLeer > 0) {
+                Notification.show("Tienes una nueva notificación.", 3500, Notification.Position.TOP_END);
+            }
+        }));
+    }
+
+    private void cancelarSuscripcionNotificaciones() {
+        if (suscripcionNotificaciones != null) {
+            suscripcionNotificaciones.remove();
+            suscripcionNotificaciones = null;
+        }
+    }
+
+    private void actualizarCampana(TenantUserDetails usuario, long sinLeer) {
+        if (campana == null) return;
+        String descripcion = sinLeer == 0 ? "Notificaciones" : sinLeer + " notificaciones sin leer";
+        campana.setTooltipText(descripcion);
+        campana.setAriaLabel(descripcion);
+        campana.setText(sinLeer == 0 ? "" : sinLeer > 99 ? "99+" : String.valueOf(sinLeer));
     }
 
     private void cambiarModoOscuro() {
@@ -237,7 +284,8 @@ public class MainLayout extends AppLayout {
                 .set("bottom", "0")
                 .set("min-height", "2.75rem")
                 // El contenido nunca debe quedar por encima del pie fijo.
-                .set("z-index", "10")
+                // Los menús y diálogos deben abrirse sobre el pie fijo.
+                .set("z-index", "1")
                 .set("padding", "0.55rem 1.5rem")
                 .set("background-color", "#ffffff")
                 .set("color", "#64748b")
@@ -307,9 +355,11 @@ public class MainLayout extends AppLayout {
         nav.addItem(new SideNavItem("Auditoría", "auditoria", VaadinIcon.EYE.create()));
         SideNavItem empresas = new SideNavItem("Empresas", "empresas", VaadinIcon.BUILDING.create());
         TenantUserDetails usuario = AuthService.getAuthenticatedUser();
-        empresas.setVisible(usuario != null && usuario.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_SUPERADMIN".equals(authority.getAuthority())));
-        nav.addItem(empresas);
+        // No se agrega al árbol de navegación para perfiles normales; no basta ocultarlo visualmente.
+        if (usuario != null && "SUPERADMIN".equalsIgnoreCase(usuario.getEmpresaCodigo())
+                && usuario.getAuthorities().stream().anyMatch(authority -> "ROLE_SUPERADMIN".equals(authority.getAuthority()))) {
+            nav.addItem(empresas);
+        }
         aplicarPermisosMenu(nav);
         return nav;
     }

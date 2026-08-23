@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @Theme(value = "citacloud")
+@Push
 public class Application implements AppShellConfigurator {
 
     @Override

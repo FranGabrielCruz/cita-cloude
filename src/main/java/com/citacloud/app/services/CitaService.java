@@ -17,13 +17,15 @@ public class CitaService {
     private final DisponibilidadService disponibilidadService;
     private final MedicoRepository medicoRepository;
     private final ConfiguracionFase2Service configuracionFase2Service;
+    private final NotificacionService notificaciones;
 
     public CitaService(CitaRepository citaRepository, DisponibilidadService disponibilidadService,
-                       MedicoRepository medicoRepository, ConfiguracionFase2Service configuracionFase2Service) {
+                       MedicoRepository medicoRepository, ConfiguracionFase2Service configuracionFase2Service, NotificacionService notificaciones) {
         this.citaRepository = citaRepository;
         this.disponibilidadService = disponibilidadService;
         this.medicoRepository = medicoRepository;
         this.configuracionFase2Service = configuracionFase2Service;
+        this.notificaciones = notificaciones;
     }
 
     public List<Cita> listarPorEmpresa(UUID empresaId) {
@@ -66,7 +68,18 @@ public class CitaService {
         cita.setEmpresaId(empresaId);
         boolean requiereAprobacion = configuracionFase2Service.obtener(empresaId).isRequiereAprobacionCitas();
         cita.setEstado(requiereAprobacion ? "PENDIENTE" : "CONFIRMADA");
-        return citaRepository.save(cita);
+        Cita guardada = citaRepository.save(cita);
+        if (requiereAprobacion) {
+            notificaciones.crearEmpresa(empresaId, "CITA_PENDIENTE", "CITAS",
+                    "Cita pendiente de aprobación", guardada.getPaciente().getNombreCompleto()
+                            + " solicitó una cita.", "CITA", guardada.getId());
+        } else {
+            notificaciones.crearEmpresa(empresaId, "CITA_CONFIRMADA", "CITAS",
+                    "Nueva cita confirmada", guardada.getPaciente().getNombreCompleto()
+                            + " tiene una cita confirmada para el " + guardada.getFecha() + ".",
+                    "CITA", guardada.getId());
+        }
+        return guardada;
     }
 
     public Cita actualizar(UUID empresaId, Cita cita) {
@@ -129,6 +142,8 @@ public class CitaService {
         }
         cita.setEstado("CANCELADA");
         citaRepository.save(cita);
+        notificaciones.crearEmpresa(empresaId, "CITA_CANCELADA", "CITAS", "Cita cancelada",
+                cita.getPaciente().getNombreCompleto() + " · " + cita.getFecha(), "CITA", cita.getId());
     }
 
     /** Aprueba una solicitud volviendo a validar disponibilidad antes de confirmarla. */
@@ -142,6 +157,8 @@ public class CitaService {
         validarDisponibilidad(empresaId, cita, cita.getId());
         cita.setEstado("CONFIRMADA");
         citaRepository.save(cita);
+        notificaciones.crearEmpresa(empresaId, "CITA_APROBADA", "CITAS", "Cita aprobada",
+                cita.getPaciente().getNombreCompleto() + " · " + cita.getFecha(), "CITA", cita.getId());
     }
 
     /** Cambia el estado cl\u00ednico de una cita con control de responsabilidades. */

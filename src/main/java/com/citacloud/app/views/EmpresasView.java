@@ -130,7 +130,7 @@ public class EmpresasView extends VerticalLayout implements BeforeEnterObserver 
     }
 
     private void cargar() { Boolean activa = null; if ("Activas".equals(estadoFiltro.getValue())) activa = Boolean.TRUE; if ("Inactivas".equals(estadoFiltro.getValue())) activa = Boolean.FALSE; paginador.setItems(empresaService.buscar(codigoFiltro.getValue(), nombreFiltro.getValue(), activa)); }
-    private boolean esSuperadmin() { var usuario = AuthService.getAuthenticatedUser(); return usuario != null && usuario.getAuthorities().stream().anyMatch(a -> "ROLE_SUPERADMIN".equals(a.getAuthority())); }
+    private boolean esSuperadmin() { var usuario = AuthService.getAuthenticatedUser(); return usuario != null && "SUPERADMIN".equalsIgnoreCase(usuario.getEmpresaCodigo()) && usuario.getAuthorities().stream().anyMatch(a -> "ROLE_SUPERADMIN".equals(a.getAuthority())); }
     private VerticalLayout tarjeta(Component... contenido) { VerticalLayout tarjeta = new VerticalLayout(contenido); tarjeta.setWidthFull(); tarjeta.getStyle().set("background","white").set("border","1px solid #e2e8f0").set("border-radius","12px").set("padding","1.5rem"); return tarjeta; }
     private Button boton(Component icono,String ayuda,String fondo,String color) { Button boton = new Button(icono); boton.setTooltipText(ayuda); boton.getStyle().set("background",fondo).set("color",color); return boton; }
     private Span estado(Boolean activo) { Span etiqueta = new Span(Boolean.TRUE.equals(activo) ? "Activa" : "Inactiva"); etiqueta.addClassName(Boolean.TRUE.equals(activo)?"badge-activo":"badge-inactivo"); return etiqueta; }
