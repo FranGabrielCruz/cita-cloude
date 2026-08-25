@@ -33,7 +33,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 public class MainLayout extends AppLayout {
 
     // Reserva suficiente espacio para que las vistas largas y sus paginadores no queden bajo el pie fijo.
-    private static final String ESPACIO_FOOTER = "4.5rem";
+    private static final String ESPACIO_FOOTER = "7rem";
     private static final String MODO_OSCURO = "citacloud.modoOscuro";
     private final EmpresaService empresaService;
     private final UsuarioService usuarioService;
@@ -148,7 +148,7 @@ public class MainLayout extends AppLayout {
         TenantUserDetails usuario = AuthService.getAuthenticatedUser();
         if (usuario == null) return;
         cancelarSuscripcionNotificaciones();
-        suscripcionNotificaciones = notificacionBroadcaster.suscribir(usuario.getEmpresaId(), () -> ui.access(() -> {
+        suscripcionNotificaciones = notificacionBroadcaster.suscribir(usuario.getEmpresaId(), usuario.getUsuarioId(), () -> ui.access(() -> {
             long sinLeer = notificacionService.sinLeer(usuario.getEmpresaId(), usuario.getUsuarioId());
             actualizarCampana(usuario, sinLeer);
             if (sinLeer > 0) {
@@ -393,3 +393,4 @@ public class MainLayout extends AppLayout {
         }
     }
 }
+

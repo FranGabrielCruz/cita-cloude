@@ -142,7 +142,7 @@ public class LoginView extends VerticalLayout {
         Paragraph footerText = new Paragraph("Soporte Técnico  •  Términos y Condiciones  •  Política de Privacidad");
         footerText.getStyle().set("color", "#64748b").set("font-size", "0.8125rem").set("margin", "1rem 0 0 0");
 
-        Paragraph copyright = new Paragraph("© 2024 CitaCloud. Todos los derechos reservados.");
+        Paragraph copyright = new Paragraph("© " + java.time.Year.now().getValue() + " CitaCloud · Gestión de citas");
         copyright.getStyle().set("color", "#94a3b8").set("font-size", "0.75rem").set("margin", "0");
 
         add(card, footerText, copyright);

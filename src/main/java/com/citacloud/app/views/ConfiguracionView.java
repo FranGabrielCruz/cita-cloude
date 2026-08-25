@@ -78,6 +78,7 @@ public class ConfiguracionView extends VerticalLayout {
         Checkbox requiereAprobacion = new Checkbox("Las solicitudes de pacientes requieren aprobación",
                 configuracion.isRequiereAprobacionCitas());
         Checkbox recordatorios = new Checkbox("Recordatorios activos", configuracion.isRecordatoriosActivos());
+        Checkbox notificaciones = new Checkbox("Notificaciones activas", configuracion.isNotificacionesActivas());
         TextField prefijo = new TextField("Prefijo de factura", valor(configuracion.getPrefijoFactura()));
         IntegerField siguiente = new IntegerField("Siguiente número de factura");
         siguiente.setValue(configuracion.getSiguienteFactura() > 0 ? configuracion.getSiguienteFactura() : 1);
@@ -86,7 +87,7 @@ public class ConfiguracionView extends VerticalLayout {
         ComboBox<String> unidadAltura = new ComboBox<>("Unidad de altura", List.of("METROS", "PIES")); unidadAltura.setValue(configuracion.getUnidadAltura());
         ComboBox<String> unidadPeso = new ComboBox<>("Unidad de peso", List.of("KG", "LIBRAS")); unidadPeso.setValue(configuracion.getUnidadPeso());
         ComboBox<String> unidadTemperatura = new ComboBox<>("Unidad de temperatura", List.of("C", "F")); unidadTemperatura.setValue(configuracion.getUnidadTemperatura());
-        FormLayout formulario = new FormLayout(requiereAprobacion, recordatorios, prefijo, siguiente, unidadAltura, unidadPeso, unidadTemperatura);
+        FormLayout formulario = new FormLayout(requiereAprobacion, recordatorios, notificaciones, prefijo, siguiente, unidadAltura, unidadPeso, unidadTemperatura);
         formulario.setWidthFull();
         formulario.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1), new FormLayout.ResponsiveStep("620px", 2));
         Button guardar = new Button(VaadinIcon.DISC.create());
@@ -97,7 +98,7 @@ public class ConfiguracionView extends VerticalLayout {
             try {
                 if (empresaId == null) throw new IllegalArgumentException("No se pudo identificar la empresa.");
                 configuracionFase2Service.guardar(empresaId, requiereAprobacion.getValue(), prefijo.getValue(),
-                        siguiente.getValue() == null ? 1 : siguiente.getValue(), recordatorios.getValue(), unidadAltura.getValue(), unidadPeso.getValue(), unidadTemperatura.getValue());
+                        siguiente.getValue() == null ? 1 : siguiente.getValue(), recordatorios.getValue(), notificaciones.getValue(), unidadAltura.getValue(), unidadPeso.getValue(), unidadTemperatura.getValue());
                 Notification.show("Preferencias guardadas.", 3000, Notification.Position.BOTTOM_START);
             } catch (IllegalArgumentException exception) {
                 Notification.show(exception.getMessage(), 4000, Notification.Position.MIDDLE);

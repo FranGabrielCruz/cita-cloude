@@ -44,8 +44,8 @@ public class CheckInService {
         cita.setEstado("EN_ESPERA");
         citas.save(cita);
         CheckIn guardado = checks.save(check);
-        notificaciones.crearEmpresa(empresa, "PACIENTE_EN_ESPERA", "CITAS", "Paciente en sala de espera",
-                cita.getPaciente().getNombreCompleto() + " realizó check-in.", "CITA", cita.getId());
+        notificaciones.crearParaCita(empresa, "PACIENTE_EN_ESPERA", "CITAS", "Paciente en sala de espera",
+                cita.getPaciente().getNombreCompleto() + " realizó check-in.", cita, null);
         return guardado;
     }
 }

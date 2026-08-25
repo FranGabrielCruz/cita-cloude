@@ -73,14 +73,14 @@ public class CitaService {
         Cita guardada = citaRepository.save(cita);
         auditoria.registrar(empresaId,null,"CITAS","APPOINTMENT_CREATED","CITA",guardada.getId(),"CIT-"+guardada.getId().toString().substring(0,8),guardada.getPaciente().getId(),List.of(),"SUCCESS",null,false);
         if (requiereAprobacion) {
-            notificaciones.crearEmpresa(empresaId, "CITA_PENDIENTE", "CITAS",
+            notificaciones.crearParaCita(empresaId, "CITA_PENDIENTE", "CITAS",
                     "Cita pendiente de aprobación", guardada.getPaciente().getNombreCompleto()
-                            + " solicitó una cita.", "CITA", guardada.getId());
+                            + " solicitó una cita.", guardada, null);
         } else {
-            notificaciones.crearEmpresa(empresaId, "CITA_CONFIRMADA", "CITAS",
+            notificaciones.crearParaCita(empresaId, "CITA_CONFIRMADA", "CITAS",
                     "Nueva cita confirmada", guardada.getPaciente().getNombreCompleto()
                             + " tiene una cita confirmada para el " + guardada.getFecha() + ".",
-                    "CITA", guardada.getId());
+                    guardada, null);
         }
         return guardada;
     }
@@ -100,8 +100,15 @@ public class CitaService {
         if (tieneConflicto) {
             throw new IllegalArgumentException("El médico ya tiene una cita en ese horario.");
         }
+        Cita anterior = citaRepository.findById(cita.getId()).orElseThrow();
+        UUID medicoAnteriorId = anterior.getMedico() == null ? null : anterior.getMedico().getId();
         Cita guardada=citaRepository.save(cita);
         auditoria.registrar(empresaId,null,"CITAS","APPOINTMENT_RESCHEDULED","CITA",guardada.getId(),"CIT-"+guardada.getId().toString().substring(0,8),guardada.getPaciente().getId(),List.of(),"SUCCESS",null,false);
+        boolean cambioMedico = !java.util.Objects.equals(medicoAnteriorId, guardada.getMedico().getId());
+        notificaciones.crearParaCita(empresaId, cambioMedico ? "CITA_REASIGNADA" : "CITA_REPROGRAMADA", "CITAS",
+                cambioMedico ? "Cita reasignada" : "Cita reprogramada",
+                guardada.getPaciente().getNombreCompleto() + " · " + guardada.getFecha() + " " + guardada.getHoraInicio(),
+                guardada, cambioMedico ? medicoAnteriorId : null);
         return guardada;
     }
 
@@ -148,8 +155,8 @@ public class CitaService {
         cita.setEstado("CANCELADA");
         citaRepository.save(cita);
         auditoria.registrar(empresaId,null,"CITAS","APPOINTMENT_CANCELLED","CITA",cita.getId(),"CIT-"+cita.getId().toString().substring(0,8),cita.getPaciente().getId(),List.of(new AuditoriaService.Cambio("estado","ACTIVA","CANCELADA")),"SUCCESS",null,false);
-        notificaciones.crearEmpresa(empresaId, "CITA_CANCELADA", "CITAS", "Cita cancelada",
-                cita.getPaciente().getNombreCompleto() + " · " + cita.getFecha(), "CITA", cita.getId());
+        notificaciones.crearParaCita(empresaId, "CITA_CANCELADA", "CITAS", "Cita cancelada",
+                cita.getPaciente().getNombreCompleto() + " · " + cita.getFecha(), cita, null);
     }
 
     /** Aprueba una solicitud volviendo a validar disponibilidad antes de confirmarla. */
@@ -164,8 +171,8 @@ public class CitaService {
         cita.setEstado("CONFIRMADA");
         citaRepository.save(cita);
         auditoria.registrar(empresaId,null,"CITAS","APPOINTMENT_APPROVED","CITA",cita.getId(),"CIT-"+cita.getId().toString().substring(0,8),cita.getPaciente().getId(),List.of(new AuditoriaService.Cambio("estado","PENDIENTE","CONFIRMADA")),"SUCCESS",null,false);
-        notificaciones.crearEmpresa(empresaId, "CITA_APROBADA", "CITAS", "Cita aprobada",
-                cita.getPaciente().getNombreCompleto() + " · " + cita.getFecha(), "CITA", cita.getId());
+        notificaciones.crearParaCita(empresaId, "CITA_APROBADA", "CITAS", "Cita aprobada",
+                cita.getPaciente().getNombreCompleto() + " · " + cita.getFecha(), cita, null);
     }
 
     /** Cambia el estado cl\u00ednico de una cita con control de responsabilidades. */

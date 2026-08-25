@@ -36,7 +36,7 @@ public class PaginadorTabla<T> extends HorizontalLayout {
                 .set("flex-wrap", "wrap").set("gap", "0.75rem");
 
         filasPorPagina.setAriaLabel("Filas por página");
-        filasPorPagina.setItems(10, 25, 50, 100);
+        filasPorPagina.setItems(10, 20, 25, 50, 100);
         filasPorPagina.setValue(10);
         filasPorPagina.setWidth("80px");
         filasPorPagina.setAllowCustomValue(false);
@@ -74,6 +74,14 @@ public class PaginadorTabla<T> extends HorizontalLayout {
         elementos = nuevosElementos == null ? List.of() : new ArrayList<>(nuevosElementos);
         paginaActual = 0;
         actualizarTabla();
+    }
+
+    /** Configura la cantidad inicial de filas sin afectar el resto de las tablas. */
+    public void setFilasPorPagina(int cantidad) {
+        if (cantidad <= 0) {
+            throw new IllegalArgumentException("La cantidad de filas debe ser mayor que cero.");
+        }
+        filasPorPagina.setValue(cantidad);
     }
 
     private void cambiarPagina(int cambio) {

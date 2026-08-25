@@ -14,23 +14,24 @@ import java.util.concurrent.ConcurrentHashMap;
 public class NotificacionBroadcaster {
     private final Set<Suscriptor> suscriptores = ConcurrentHashMap.newKeySet();
 
-    public Registration suscribir(UUID empresaId, Runnable accion) {
-        Suscriptor suscriptor = new Suscriptor(empresaId, accion);
+    public Registration suscribir(UUID empresaId, UUID usuarioId, Runnable accion) {
+        Suscriptor suscriptor = new Suscriptor(empresaId, usuarioId, accion);
         suscriptores.add(suscriptor);
         return () -> suscriptores.remove(suscriptor);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void notificarDespuesDeConfirmar(NotificacionesCreadasEvent evento) {
-        publicarEmpresa(evento.empresaId());
+        publicar(evento.empresaId(), evento.usuariosDestinatarios());
     }
 
-    private void publicarEmpresa(UUID empresaId) {
-        suscriptores.stream().filter(suscriptor -> empresaId.equals(suscriptor.empresaId()))
+    private void publicar(UUID empresaId, Set<UUID> usuariosDestinatarios) {
+        suscriptores.stream().filter(suscriptor -> empresaId.equals(suscriptor.empresaId())
+                        && usuariosDestinatarios.contains(suscriptor.usuarioId()))
                 .forEach(Suscriptor::actualizar);
     }
 
-    private record Suscriptor(UUID empresaId, Runnable accion) {
+    private record Suscriptor(UUID empresaId, UUID usuarioId, Runnable accion) {
         void actualizar() {
             accion.run();
         }
