@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport name="gestion_control" pageWidth="842" pageHeight="595" columnWidth="742" leftMargin="50" rightMargin="50" topMargin="32" bottomMargin="32" whenNoDataType="AllSectionsNoDetail">
+    <parameter name="CLINICA" class="java.lang.String"/>
+    <parameter name="PERIODO" class="java.lang.String"/>
+    <parameter name="TOTAL_CITAS" class="java.lang.Long"/>
+    <parameter name="ATENDIDOS" class="java.lang.Long"/>
+    <parameter name="NUEVOS" class="java.lang.Long"/>
+    <parameter name="CANCELADAS" class="java.lang.String"/>
+    <parameter name="NO_SHOW" class="java.lang.String"/>
+    <parameter name="ASISTENCIA" class="java.lang.String"/>
+    <parameter name="ESTADOS" class="java.lang.String"/>
+    <parameter name="ESPECIALIDADES" class="java.lang.String"/>
+    <parameter name="INDICADORES" class="java.lang.String"/>
+    <parameter name="ESP_NOMBRES" class="java.lang.String"/>
+    <parameter name="ESP_CITAS" class="java.lang.String"/>
+    <parameter name="ESP_ATENDIDOS" class="java.lang.String"/>
+    <parameter name="ESP_PORCENTAJES" class="java.lang.String"/>
+    <parameter name="IND_NOMBRES" class="java.lang.String"/>
+    <parameter name="IND_RESULTADOS" class="java.lang.String"/>
+    <parameter name="IND_METAS" class="java.lang.String"/>
+    <parameter name="IND_ESTADOS" class="java.lang.String"/>
+    <parameter name="ALERTAS" class="java.lang.String"/>
+    <parameter name="GENERADO" class="java.lang.String"/>
+
+    <field name="medico" class="java.lang.String"/>
+    <field name="citas" class="java.lang.Long"/>
+    <field name="atendidos" class="java.lang.Long"/>
+    <field name="canceladas" class="java.lang.Long"/>
+    <field name="noShow" class="java.lang.Long"/>
+    <field name="promedio" class="java.lang.Double"/>
+
+    <title>
+        <band height="245">
+            <textField><reportElement x="0" y="0" width="742" height="23" forecolor="#0C3C82"/><textElement><font size="17" isBold="true"/></textElement><textFieldExpression><![CDATA[$P{CLINICA}]]></textFieldExpression></textField>
+            <staticText><reportElement x="0" y="30" width="742" height="29" forecolor="#0C3C82"/><textElement><font size="22" isBold="true"/></textElement><text><![CDATA[REPORTE DE GESTIÓN Y CONTROL]]></text></staticText>
+            <textField><reportElement x="0" y="64" width="742" height="17"/><textFieldExpression><![CDATA["Período: "+$P{PERIODO}+"   |   Sucursal: Todas   |   Médico: Todos   |   Especialidad: Todas"]]></textFieldExpression></textField>
+            <staticText><reportElement x="0" y="94" width="250" height="18" forecolor="#0C3C82"/><textElement><font size="13" isBold="true"/></textElement><text><![CDATA[RESUMEN EJECUTIVO]]></text></staticText>
+            <rectangle><reportElement x="0" y="119" width="742" height="70" backcolor="#EEF4FF" mode="Opaque"/><graphicElement/></rectangle>
+            <staticText><reportElement x="12" y="130" width="105" height="15"/><textElement textAlignment="Center"><font size="10" isBold="true"/></textElement><text><![CDATA[CITAS]]></text></staticText>
+            <textField><reportElement x="12" y="149" width="105" height="26"/><textElement textAlignment="Center"><font size="20" isBold="true"/></textElement><textFieldExpression><![CDATA[$P{TOTAL_CITAS}]]></textFieldExpression></textField>
+            <staticText><reportElement x="128" y="130" width="105" height="15"/><textElement textAlignment="Center"><font size="10" isBold="true"/></textElement><text><![CDATA[ATENDIDOS]]></text></staticText>
+            <textField><reportElement x="128" y="149" width="105" height="26"/><textElement textAlignment="Center"><font size="20" isBold="true"/></textElement><textFieldExpression><![CDATA[$P{ATENDIDOS}]]></textFieldExpression></textField>
+            <staticText><reportElement x="244" y="130" width="105" height="15"/><textElement textAlignment="Center"><font size="10" isBold="true"/></textElement><text><![CDATA[CANCELADAS]]></text></staticText>
+            <textField><reportElement x="244" y="149" width="105" height="26"/><textElement textAlignment="Center"><font size="20" isBold="true"/></textElement><textFieldExpression><![CDATA[$P{CANCELADAS}]]></textFieldExpression></textField>
+            <staticText><reportElement x="360" y="130" width="105" height="15"/><textElement textAlignment="Center"><font size="10" isBold="true"/></textElement><text><![CDATA[NO-SHOW]]></text></staticText>
+            <textField><reportElement x="360" y="149" width="105" height="26"/><textElement textAlignment="Center"><font size="20" isBold="true"/></textElement><textFieldExpression><![CDATA[$P{NO_SHOW}]]></textFieldExpression></textField>
+            <staticText><reportElement x="476" y="130" width="105" height="15"/><textElement textAlignment="Center"><font size="10" isBold="true"/></textElement><text><![CDATA[NUEVOS]]></text></staticText>
+            <textField><reportElement x="476" y="149" width="105" height="26"/><textElement textAlignment="Center"><font size="20" isBold="true"/></textElement><textFieldExpression><![CDATA[$P{NUEVOS}]]></textFieldExpression></textField>
+            <staticText><reportElement x="592" y="130" width="135" height="15"/><textElement textAlignment="Center"><font size="10" isBold="true"/></textElement><text><![CDATA[ASISTENCIA]]></text></staticText>
+            <textField><reportElement x="592" y="149" width="135" height="26"/><textElement textAlignment="Center"><font size="20" isBold="true"/></textElement><textFieldExpression><![CDATA[$P{ASISTENCIA}]]></textFieldExpression></textField>
+            <staticText><reportElement x="0" y="202" width="200" height="15" forecolor="#0C3C82"/><textElement><font isBold="true"/></textElement><text><![CDATA[ESTADO DE CITAS]]></text></staticText>
+            <textField><reportElement x="0" y="220" width="742" height="20"/><textFieldExpression><![CDATA[$P{ESTADOS}]]></textFieldExpression></textField>
+        </band>
+    </title>
+    <columnHeader>
+        <band height="48">
+            <staticText><reportElement x="0" y="0" width="742" height="18" forecolor="#0C3C82"/><textElement><font size="13" isBold="true"/></textElement><text><![CDATA[PRODUCTIVIDAD MÉDICA]]></text></staticText>
+            <staticText><reportElement x="0" y="23" width="252" height="20" mode="Opaque" backcolor="#0C3C82" forecolor="#FFFFFF"/><textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement><text><![CDATA[MÉDICO]]></text></staticText>
+            <staticText><reportElement x="252" y="23" width="98" height="20" mode="Opaque" backcolor="#0C3C82" forecolor="#FFFFFF"/><textElement textAlignment="Center" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement><text><![CDATA[CITAS]]></text></staticText>
+            <staticText><reportElement x="350" y="23" width="98" height="20" mode="Opaque" backcolor="#0C3C82" forecolor="#FFFFFF"/><textElement textAlignment="Center" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement><text><![CDATA[ATENDIDOS]]></text></staticText>
+            <staticText><reportElement x="448" y="23" width="98" height="20" mode="Opaque" backcolor="#0C3C82" forecolor="#FFFFFF"/><textElement textAlignment="Center" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement><text><![CDATA[CANCELADAS]]></text></staticText>
+            <staticText><reportElement x="546" y="23" width="98" height="20" mode="Opaque" backcolor="#0C3C82" forecolor="#FFFFFF"/><textElement textAlignment="Center" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement><text><![CDATA[NO-SHOW]]></text></staticText>
+            <staticText><reportElement x="644" y="23" width="98" height="20" mode="Opaque" backcolor="#0C3C82" forecolor="#FFFFFF"/><textElement textAlignment="Center" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement><text><![CDATA[PROM./DÍA]]></text></staticText>
+        </band>
+    </columnHeader>
+    <detail>
+        <band height="24">
+            <textField><reportElement x="0" y="0" width="252" height="23" mode="Opaque" backcolor="#F5F8FC"/><textElement verticalAlignment="Middle"><font size="9"/></textElement><textFieldExpression><![CDATA[$F{medico}]]></textFieldExpression></textField>
+            <textField><reportElement x="252" y="0" width="98" height="23" mode="Opaque" backcolor="#F5F8FC"/><textElement textAlignment="Center" verticalAlignment="Middle"><font size="9"/></textElement><textFieldExpression><![CDATA[$F{citas}]]></textFieldExpression></textField>
+            <textField><reportElement x="350" y="0" width="98" height="23" mode="Opaque" backcolor="#F5F8FC"/><textElement textAlignment="Center" verticalAlignment="Middle"><font size="9"/></textElement><textFieldExpression><![CDATA[$F{atendidos}]]></textFieldExpression></textField>
+            <textField><reportElement x="448" y="0" width="98" height="23" mode="Opaque" backcolor="#F5F8FC"/><textElement textAlignment="Center" verticalAlignment="Middle"><font size="9"/></textElement><textFieldExpression><![CDATA[$F{canceladas}]]></textFieldExpression></textField>
+            <textField><reportElement x="546" y="0" width="98" height="23" mode="Opaque" backcolor="#F5F8FC"/><textElement textAlignment="Center" verticalAlignment="Middle"><font size="9"/></textElement><textFieldExpression><![CDATA[$F{noShow}]]></textFieldExpression></textField>
+            <textField><reportElement x="644" y="0" width="98" height="23" mode="Opaque" backcolor="#F5F8FC"/><textElement textAlignment="Center" verticalAlignment="Middle"><font size="9"/></textElement><textFieldExpression><![CDATA[$F{promedio}]]></textFieldExpression></textField>
+        </band>
+    </detail>
+    <summary>
+        <band height="282">
+            <rectangle><reportElement x="0" y="0" width="742" height="86" mode="Opaque" backcolor="#F5F8FC"/><graphicElement/></rectangle>
+            <staticText><reportElement x="0" y="0" width="742" height="20" mode="Opaque" backcolor="#E3EEFF" forecolor="#0C3C82"/><textElement textAlignment="Center" verticalAlignment="Middle"><font size="11" isBold="true"/></textElement><text><![CDATA[DISTRIBUCIÓN POR ESPECIALIDAD]]></text></staticText>
+            <staticText><reportElement x="12" y="26" width="290" height="15" mode="Opaque" backcolor="#0C3C82" forecolor="#FFFFFF"/><textElement textAlignment="Center"><font size="8" isBold="true"/></textElement><text><![CDATA[ESPECIALIDAD]]></text></staticText><staticText><reportElement x="302" y="26" width="100" height="15" mode="Opaque" backcolor="#0C3C82" forecolor="#FFFFFF"/><textElement textAlignment="Center"><font size="8" isBold="true"/></textElement><text><![CDATA[CITAS]]></text></staticText><staticText><reportElement x="402" y="26" width="140" height="15" mode="Opaque" backcolor="#0C3C82" forecolor="#FFFFFF"/><textElement textAlignment="Center"><font size="8" isBold="true"/></textElement><text><![CDATA[ATENDIDOS]]></text></staticText><staticText><reportElement x="542" y="26" width="188" height="15" mode="Opaque" backcolor="#0C3C82" forecolor="#FFFFFF"/><textElement textAlignment="Center"><font size="8" isBold="true"/></textElement><text><![CDATA[PORCENTAJE]]></text></staticText>
+            <textField><reportElement x="12" y="47" width="290" height="32"/><textElement textAlignment="Center"><font size="8"/></textElement><textFieldExpression><![CDATA[$P{ESP_NOMBRES}]]></textFieldExpression></textField><textField><reportElement x="302" y="47" width="100" height="32"/><textElement textAlignment="Center"><font size="8"/></textElement><textFieldExpression><![CDATA[$P{ESP_CITAS}]]></textFieldExpression></textField><textField><reportElement x="402" y="47" width="140" height="32"/><textElement textAlignment="Center"><font size="8"/></textElement><textFieldExpression><![CDATA[$P{ESP_ATENDIDOS}]]></textFieldExpression></textField><textField><reportElement x="542" y="47" width="188" height="32"/><textElement textAlignment="Center"><font size="8"/></textElement><textFieldExpression><![CDATA[$P{ESP_PORCENTAJES}]]></textFieldExpression></textField>
+
+            <rectangle><reportElement x="0" y="98" width="742" height="86" mode="Opaque" backcolor="#F5F8FC"/><graphicElement/></rectangle>
+            <staticText><reportElement x="0" y="98" width="742" height="20" mode="Opaque" backcolor="#E3EEFF" forecolor="#0C3C82"/><textElement textAlignment="Center" verticalAlignment="Middle"><font size="11" isBold="true"/></textElement><text><![CDATA[INDICADORES DE CONTROL]]></text></staticText>
+            <staticText><reportElement x="12" y="124" width="290" height="15" mode="Opaque" backcolor="#0C3C82" forecolor="#FFFFFF"/><textElement textAlignment="Center"><font size="8" isBold="true"/></textElement><text><![CDATA[INDICADOR]]></text></staticText><staticText><reportElement x="302" y="124" width="140" height="15" mode="Opaque" backcolor="#0C3C82" forecolor="#FFFFFF"/><textElement textAlignment="Center"><font size="8" isBold="true"/></textElement><text><![CDATA[RESULTADO]]></text></staticText><staticText><reportElement x="442" y="124" width="120" height="15" mode="Opaque" backcolor="#0C3C82" forecolor="#FFFFFF"/><textElement textAlignment="Center"><font size="8" isBold="true"/></textElement><text><![CDATA[META]]></text></staticText><staticText><reportElement x="562" y="124" width="168" height="15" mode="Opaque" backcolor="#0C3C82" forecolor="#FFFFFF"/><textElement textAlignment="Center"><font size="8" isBold="true"/></textElement><text><![CDATA[ESTADO]]></text></staticText>
+            <textField><reportElement x="12" y="145" width="290" height="32"/><textElement textAlignment="Center"><font size="8"/></textElement><textFieldExpression><![CDATA[$P{IND_NOMBRES}]]></textFieldExpression></textField><textField><reportElement x="302" y="145" width="140" height="32"/><textElement textAlignment="Center"><font size="8"/></textElement><textFieldExpression><![CDATA[$P{IND_RESULTADOS}]]></textFieldExpression></textField><textField><reportElement x="442" y="145" width="120" height="32"/><textElement textAlignment="Center"><font size="8"/></textElement><textFieldExpression><![CDATA[$P{IND_METAS}]]></textFieldExpression></textField><textField><reportElement x="562" y="145" width="168" height="32"/><textElement textAlignment="Center"><font size="8"/></textElement><textFieldExpression><![CDATA[$P{IND_ESTADOS}]]></textFieldExpression></textField>
+
+            <rectangle><reportElement x="0" y="196" width="742" height="74" mode="Opaque" backcolor="#FFF8E8"/><graphicElement/></rectangle>
+            <staticText><reportElement x="0" y="196" width="742" height="20" mode="Opaque" backcolor="#FCE9B5" forecolor="#805B00"/><textElement textAlignment="Center" verticalAlignment="Middle"><font size="11" isBold="true"/></textElement><text><![CDATA[ALERTAS Y OPORTUNIDADES]]></text></staticText>
+            <textField><reportElement x="0" y="223" width="742" height="40"/><textElement textAlignment="Center"><font size="9"/></textElement><textFieldExpression><![CDATA[$P{ALERTAS}]]></textFieldExpression></textField>
+        </band>
+    </summary>
+</jasperReport>

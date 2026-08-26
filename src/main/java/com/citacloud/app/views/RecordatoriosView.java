@@ -131,7 +131,8 @@ public class RecordatoriosView extends VerticalLayout {
                     .set("border-radius", "8px");
             String hora = notificacion.getCreadaEn() == null ? "" : notificacion.getCreadaEn()
                     .format(DateTimeFormatter.ofPattern("h:mm a"));
-            Button abrir = new Button("Ver detalle", e -> abrir(notificacion));
+            Button abrir = new Button("PAYMENT".equals(notificacion.getEntidadTipo()) ? "Ver pago" : "Ver detalle",
+                    e -> abrir(notificacion));
             abrir.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
             tarjeta.add(new Span((notificacion.isLeida() ? "○ " : "● ") + "🔔 "
                     + notificacion.getTitulo() + " · " + hora), new Paragraph(notificacion.getMensaje()), abrir);
@@ -141,7 +142,9 @@ public class RecordatoriosView extends VerticalLayout {
 
     private void abrir(Notificacion notificacion) {
         if (empresaId != null && usuarioId != null) servicio.leer(empresaId, usuarioId, notificacion.getId());
-        getUI().ifPresent(ui -> ui.navigate("CITA".equals(notificacion.getEntidadTipo()) ? "citas" : "recordatorios"));
+        getUI().ifPresent(ui -> ui.navigate("CITA".equals(notificacion.getEntidadTipo()) ? "citas"
+                : "PAYMENT".equals(notificacion.getEntidadTipo()) ? "pagos?pago=" + notificacion.getEntidadId()
+                : "recordatorios"));
     }
 
     private List<Notificacion> datos() {

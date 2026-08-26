@@ -60,4 +60,22 @@ class JasperTemplateValidationTest {
             }
         });
     }
+
+    @Test
+    void compilaPlantillaDeCierreDeCaja() {
+        assertDoesNotThrow(() -> {
+            try (var cierre = new ClassPathResource("reportes/cierre-caja.jrxml").getInputStream()) {
+                var reporte = JasperCompileManager.compileReport(cierre);
+                Map<String, Object> parametros = new HashMap<>();
+                parametros.put("CLINICA", "Clínica San Rafael"); parametros.put("RNC", "101-99887-1");
+                parametros.put("SUCURSAL", "Central"); parametros.put("NUMERO", "CJ-000001");
+                parametros.put("APERTURA", "25/08/2026 08:00"); parametros.put("CIERRE", "25/08/2026 17:00");
+                parametros.put("FONDO", new java.math.BigDecimal("5000.00")); parametros.put("INGRESOS", new java.math.BigDecimal("3500.00"));
+                parametros.put("EGRESOS", new java.math.BigDecimal("500.00")); parametros.put("ESPERADO", new java.math.BigDecimal("8000.00"));
+                parametros.put("CONTADO", new java.math.BigDecimal("8000.00")); parametros.put("DIFERENCIA", java.math.BigDecimal.ZERO); parametros.put("MOTIVO", "");
+                var documento = JasperFillManager.fillReport(reporte, parametros, new JRMapCollectionDataSource(List.of(Map.of("hora", "10:00", "tipo", "PAYMENT", "referencia", "PAG-000001", "metodo", "EFECTIVO", "entrada", new java.math.BigDecimal("100.00"), "salida", java.math.BigDecimal.ZERO))));
+                assertTrue(JasperExportManager.exportReportToPdf(documento).length > 1_000);
+            }
+        });
+    }
 }

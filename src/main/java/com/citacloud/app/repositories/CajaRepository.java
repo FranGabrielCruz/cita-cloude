@@ -1,0 +1,3 @@
+package com.citacloud.app.repositories;
+import com.citacloud.app.models.Caja; import java.util.*; import org.springframework.data.jpa.repository.*;
+public interface CajaRepository extends JpaRepository<Caja,UUID>{List<Caja> findByEmpresaIdOrderByNombre(UUID e); List<Caja> findByEmpresaIdAndSucursalIdAndActivaTrueOrderByNombre(UUID e,UUID s); @Query("select distinct c from Caja c join c.usuarios u where c.empresaId=?1 and c.sucursal.id=?2 and c.activa=true and u.id=?3 order by c.nombre") List<Caja> autorizadas(UUID e,UUID s,UUID u); Optional<Caja> findByIdAndEmpresaId(UUID id,UUID e); boolean existsByEmpresaIdAndCodigoIgnoreCase(UUID e,String c);}

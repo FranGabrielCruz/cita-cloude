@@ -5,6 +5,9 @@ import com.citacloud.app.models.Usuario;
 import com.citacloud.app.security.AuthService;
 import com.citacloud.app.security.TenantUserDetails;
 import com.citacloud.app.services.UsuarioService;
+import com.citacloud.app.services.CajaService;
+import com.citacloud.app.models.Caja;
+import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.citacloud.app.views.components.PaginadorTabla;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -36,7 +39,7 @@ import java.util.UUID;
 @CssImport("./styles/mobile-layouts.css")
 public class UsuariosView extends VerticalLayout {
 
-    private final UsuarioService usuarioService;
+    private final UsuarioService usuarioService; private final CajaService cajaService;
     private final UUID empresaId;
     private final Grid<Usuario> grid = new Grid<>(Usuario.class, false);
     private final PaginadorTabla<Usuario> paginador = new PaginadorTabla<>(grid);
@@ -45,8 +48,8 @@ public class UsuariosView extends VerticalLayout {
     private final ComboBox<Rol> rolFiltro = new ComboBox<>("Rol");
     private final ComboBox<String> estadoFiltro = new ComboBox<>("Estado");
 
-    public UsuariosView(UsuarioService usuarioService) {
-        this.usuarioService = usuarioService;
+    public UsuariosView(UsuarioService usuarioService, CajaService cajaService) {
+        this.usuarioService = usuarioService; this.cajaService = cajaService;
         TenantUserDetails sesion = AuthService.getAuthenticatedUser();
         empresaId = sesion == null ? null : sesion.getEmpresaId();
         setSizeFull();
@@ -122,6 +125,8 @@ public class UsuariosView extends VerticalLayout {
         EmailField email = new EmailField("Correo"); email.setMaxLength(100);
         TextField telefono = new TextField("Tel\u00e9fono"); telefono.setPlaceholder("(000) 000-0000"); telefono.setMaxLength(30);
         ComboBox<Rol> rol = new ComboBox<>("Rol"); rol.setRequiredIndicatorVisible(true); rol.setItems(usuarioService.listarRoles(empresaId)); rol.setItemLabelGenerator(Rol::getNombre);
+        MultiSelectComboBox<Caja> cajasAsignadas = new MultiSelectComboBox<>("Cajas asignadas");
+        try { List<Caja> cajas = cajaService.cajas(empresaId); cajasAsignadas.setItems(cajas); cajasAsignadas.setItemLabelGenerator(c -> c.getSucursal().getNombre()+" · "+c.getNombre()); } catch (Exception ignored) { cajasAsignadas.setVisible(false); }
         PasswordField contrasena = new PasswordField("Contrase\u00f1a"); contrasena.setRequiredIndicatorVisible(!esEdicion);
         PasswordField confirmacion = new PasswordField("Confirmar contrase\u00f1a"); confirmacion.setRequiredIndicatorVisible(!esEdicion);
         contrasena.getElement().setAttribute("autocomplete", "new-password");
@@ -133,12 +138,13 @@ public class UsuariosView extends VerticalLayout {
             email.setValue(existente.getEmail() == null ? "" : existente.getEmail()); telefono.setValue(existente.getTelefono() == null ? "" : existente.getTelefono());
             if (!existente.getRoles().isEmpty()) rol.setValue(existente.getRoles().iterator().next());
             contrasena.setHelperText("Déjala vacía para conservar la actual.");
+            try { cajasAsignadas.setValue(cajaService.cajas(empresaId).stream().filter(c -> c.getUsuarios().stream().anyMatch(u -> existente.getId().equals(u.getId()))).collect(java.util.stream.Collectors.toSet())); } catch (Exception ignored) { }
         }
-        FormLayout formulario = new FormLayout(usuario, nombre, apellido, email, telefono, rol, contrasena, confirmacion);
+        FormLayout formulario = new FormLayout(usuario, nombre, apellido, email, telefono, rol, cajasAsignadas, contrasena, confirmacion);
         formulario.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1), new FormLayout.ResponsiveStep("500px", 2)); dialog.add(formulario);
         Button guardar = new Button(VaadinIcon.DISC.create(), event -> {
             try {
-                if (esEdicion) usuarioService.actualizar(empresaId, existente.getId(), usuario.getValue(), nombre.getValue(), apellido.getValue(), email.getValue(), telefono.getValue(), contrasena.getValue(), confirmacion.getValue(), rol.getValue());
+                if (esEdicion) { usuarioService.actualizar(empresaId, existente.getId(), usuario.getValue(), nombre.getValue(), apellido.getValue(), email.getValue(), telefono.getValue(), contrasena.getValue(), confirmacion.getValue(), rol.getValue()); cajaService.asignarCajasUsuario(empresaId, existente.getId(), cajasAsignadas.getValue().stream().map(Caja::getId).toList()); }
                 else usuarioService.crear(empresaId, usuario.getValue(), nombre.getValue(), apellido.getValue(), email.getValue(), telefono.getValue(), contrasena.getValue(), confirmacion.getValue(), rol.getValue());
                 dialog.close(); actualizarUsuarios(); Notification.show(esEdicion ? "Usuario actualizado." : "Usuario creado.", 3000, Notification.Position.BOTTOM_START);
             } catch (IllegalArgumentException exception) { Notification.show(exception.getMessage(), 4000, Notification.Position.MIDDLE); }

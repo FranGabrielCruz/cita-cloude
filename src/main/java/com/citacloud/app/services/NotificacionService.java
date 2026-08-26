@@ -3,6 +3,7 @@ package com.citacloud.app.services;
 import com.citacloud.app.models.Cita;
 import com.citacloud.app.models.Notificacion;
 import com.citacloud.app.models.NotificacionDestinatario;
+import com.citacloud.app.models.Pago;
 import com.citacloud.app.repositories.NotificacionDestinatarioRepository;
 import com.citacloud.app.repositories.NotificacionRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -48,6 +49,14 @@ public class NotificacionService {
                               String mensaje, String entidadTipo, UUID entidadId) {
         crear(empresaId, tipo, categoria, titulo, mensaje, entidadTipo, entidadId,
                 resolver.paraAlertaAdministrativa(empresaId));
+    }
+
+    /** Notificación financiera centralizada; nunca resuelve médicos por el paciente del pago. */
+    @Transactional
+    public void crearParaPago(UUID empresaId, String tipo, String titulo, String mensaje, Pago pago) {
+        if (pago == null || pago.getId() == null) return;
+        crear(empresaId, tipo, "PAGOS", titulo, mensaje, "PAYMENT", pago.getId(),
+                resolver.paraPago(empresaId));
     }
 
     private void crear(UUID empresaId, String tipo, String categoria, String titulo, String mensaje,

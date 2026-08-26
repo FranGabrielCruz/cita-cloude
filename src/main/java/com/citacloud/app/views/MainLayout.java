@@ -339,7 +339,11 @@ public class MainLayout extends AppLayout {
         nav.addItem(gestionFinanciera);
         nav.addItem(new SideNavItem("Facturación", "facturacion", VaadinIcon.INVOICE.create()));
         nav.addItem(new SideNavItem("e-CF", "e-cf", VaadinIcon.FILE_CODE.create()));
-        nav.addItem(new SideNavItem("Caja", "caja", VaadinIcon.CASH.create()));
+        nav.addItem(new SideNavItem("Cierre Caja", "caja", VaadinIcon.CASH.create()));
+        TenantUserDetails usuarioActual = AuthService.getAuthenticatedUser();
+        if (usuarioActual != null && usuarioActual.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR") || a.getAuthority().equals("ROLE_SUPERADMIN") || a.getAuthority().equals("CASH_REGISTER_VIEW"))) {
+            nav.addItem(new SideNavItem("Cajas", "cajas", VaadinIcon.CASH.create()));
+        }
         nav.addItem(new SideNavItem("Pagos", "pagos", VaadinIcon.CREDIT_CARD.create()));
         nav.addItem(new SideNavItem("Cuentas por cobrar", "cuentas-por-cobrar", VaadinIcon.DOLLAR.create()));
         nav.addItem(new SideNavItem("ARS", "ars", VaadinIcon.UMBRELLA.create()));
@@ -393,4 +397,3 @@ public class MainLayout extends AppLayout {
         }
     }
 }
-
