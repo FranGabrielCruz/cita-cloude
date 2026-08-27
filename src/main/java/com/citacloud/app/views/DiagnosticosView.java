@@ -1,1 +1,13 @@
-package com.citacloud.app.views; import com.vaadin.flow.router.*; import jakarta.annotation.security.PermitAll; @Route(value="diagnosticos",layout=MainLayout.class) @PageTitle("Diagnósticos | CitaCloud") @PermitAll public class DiagnosticosView extends ModuloClinicoView {public DiagnosticosView(){super("Diagnósticos","Registre diagnósticos principales y secundarios de las consultas.");}}
+package com.citacloud.app.views;
+
+import com.vaadin.flow.router.*;
+import jakarta.annotation.security.PermitAll;
+
+@Route(value = "diagnosticos", layout = MainLayout.class)
+@PageTitle("Diagnósticos | CitaCloud")
+@PermitAll
+public class DiagnosticosView extends ModuloClinicoView {
+    public DiagnosticosView() {
+        super("Diagnósticos", "Registre diagnósticos principales y secundarios de las consultas.");
+    }
+}

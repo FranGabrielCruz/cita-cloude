@@ -323,6 +323,7 @@ public class MainLayout extends AppLayout {
         nav.addItem(new SideNavItem("Horarios", "horarios", VaadinIcon.CLOCK.create()));
         nav.addItem(new SideNavItem("Consultorios", "consultorios", VaadinIcon.OFFICE.create()));
         nav.addItem(new SideNavItem("Seguros", "seguros", VaadinIcon.SHIELD.create()));
+        nav.addItem(new SideNavItem("Servicios", "servicios", VaadinIcon.STETHOSCOPE.create()));
         SideNavItem administracion = new SideNavItem("ADMINISTRACIÓN");
         administracion.addClassName("sidebar-section");
         nav.addItem(administracion);
@@ -378,7 +379,7 @@ public class MainLayout extends AppLayout {
                 .anyMatch(authority -> "ROLE_ADMINISTRADOR".equals(authority.getAuthority())
                         || "ROLE_SUPERADMIN".equals(authority.getAuthority()));
         String[] permisos = {"MENU_DASHBOARD", null, "MENU_MI_AGENDA", "MENU_CITAS", "MENU_PACIENTES", "MENU_MEDICOS",
-                "MENU_ESPECIALIDADES", "MENU_HORARIOS", "MENU_CONSULTORIOS", "MENU_SEGUROS", null,
+                "MENU_ESPECIALIDADES", "MENU_HORARIOS", "MENU_CONSULTORIOS", "MENU_SEGUROS", "MENU_SERVICIOS", null,
                 "MENU_USUARIOS", "MENU_ROLES", null, null, "MENU_SIGNOS_VITALES", "MENU_CONSULTA_MEDICA", "MENU_EXPEDIENTE_CLINICO", "MENU_ANTECEDENTES", "MENU_ALERGIAS", "MENU_DIAGNOSTICOS", "MENU_TRATAMIENTOS", "MENU_RECETAS", "MENU_ORDENES_ESTUDIOS", "MENU_RECORDATORIOS",
                 "MENU_DOCUMENTOS", null, "MENU_FACTURACION", "MENU_ECF", "MENU_CAJA", "MENU_PAGOS", "MENU_CUENTAS_COBRAR", "MENU_ARS", "MENU_INVENTARIO", "MENU_FARMACIA", "MENU_LABORATORIO", "MENU_REPORTES_FINANCIEROS", null, "MENU_REPORTES", "MENU_GESTION_CONTROL", "MENU_AUDITORIA", null};
         var elementos = nav.getElement().getChildren().toList();

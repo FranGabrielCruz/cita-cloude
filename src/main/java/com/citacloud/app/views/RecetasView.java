@@ -1,1 +1,13 @@
-package com.citacloud.app.views; import com.vaadin.flow.router.*; import jakarta.annotation.security.PermitAll; @Route(value="recetas",layout=MainLayout.class) @PageTitle("Recetas | CitaCloud") @PermitAll public class RecetasView extends ModuloClinicoView {public RecetasView(){super("Recetas","Cree recetas con medicamentos, dosis, frecuencia y duración.");}}
+package com.citacloud.app.views;
+
+import com.vaadin.flow.router.*;
+import jakarta.annotation.security.PermitAll;
+
+@Route(value = "recetas", layout = MainLayout.class)
+@PageTitle("Recetas | CitaCloud")
+@PermitAll
+public class RecetasView extends ModuloClinicoView {
+    public RecetasView() {
+        super("Recetas", "Cree recetas con medicamentos, dosis, frecuencia y duración.");
+    }
+}

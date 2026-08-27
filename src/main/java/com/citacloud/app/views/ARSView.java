@@ -8,5 +8,7 @@ import jakarta.annotation.security.PermitAll;
 @PageTitle("ARS | CitaCloud")
 @PermitAll
 public class ARSView extends ModuloFase3View {
-    public ARSView() { super("ARS", "Gestione las aseguradoras y sus procesos operativos."); }
+    public ARSView() {
+        super("ARS", "Gestione las aseguradoras y sus procesos operativos.");
+    }
 }

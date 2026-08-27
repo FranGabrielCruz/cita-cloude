@@ -1,3 +1,27 @@
 package com.citacloud.app.controllers;
-import com.citacloud.app.security.*; import com.citacloud.app.services.RecetaService; import jakarta.annotation.security.PermitAll; import org.springframework.http.*; import org.springframework.web.bind.annotation.*; import java.util.UUID;
-@RestController @RequestMapping("/recetas") @PermitAll public class RecetaPdfController {private final RecetaService recetas;public RecetaPdfController(RecetaService r){recetas=r;}@GetMapping(value="/{id}/pdf",produces=MediaType.APPLICATION_PDF_VALUE) public ResponseEntity<byte[]> pdf(@PathVariable UUID id){TenantUserDetails u=AuthService.getAuthenticatedUser();if(u==null)return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(recetas.generarPdfJasper(u.getEmpresaId(),id));}}
+
+import com.citacloud.app.security.*;
+import com.citacloud.app.services.RecetaService;
+import jakarta.annotation.security.PermitAll;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/recetas")
+@PermitAll
+public class RecetaPdfController {
+    private final RecetaService recetas;
+
+    public RecetaPdfController(RecetaService r) {
+        recetas = r;
+    }
+
+    @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> pdf(@PathVariable UUID id) {
+        TenantUserDetails u = AuthService.getAuthenticatedUser();
+        if (u == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(recetas.generarPdfJasper(u.getEmpresaId(), id));
+    }
+}

@@ -1,2 +1,2 @@
 package com.citacloud.app.repositories; import com.citacloud.app.models.Servicio; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*;
-public interface ServicioRepository extends JpaRepository<Servicio,UUID>{ List<Servicio> findByEmpresaIdOrderByNombre(UUID empresaId); Optional<Servicio> findByIdAndEmpresaId(UUID id,UUID empresaId); }
+public interface ServicioRepository extends JpaRepository<Servicio,UUID>{ List<Servicio> findByEmpresaIdOrderByNombre(UUID empresaId); Optional<Servicio> findByIdAndEmpresaId(UUID id,UUID empresaId); boolean existsByEmpresaIdAndCodigoIgnoreCase(UUID empresaId,String codigo); }

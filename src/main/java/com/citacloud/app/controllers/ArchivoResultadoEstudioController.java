@@ -1,3 +1,38 @@
 package com.citacloud.app.controllers;
-import com.citacloud.app.security.*; import com.citacloud.app.services.ArchivoResultadoEstudioService; import jakarta.annotation.security.PermitAll; import org.springframework.core.io.ByteArrayResource; import org.springframework.http.*; import org.springframework.web.bind.annotation.*; import org.springframework.web.multipart.MultipartFile; import java.util.UUID;
-@RestController @RequestMapping("/resultados-estudios") @PermitAll public class ArchivoResultadoEstudioController { private final ArchivoResultadoEstudioService archivos; public ArchivoResultadoEstudioController(ArchivoResultadoEstudioService a){archivos=a;} @PostMapping("/{detalleId}/archivos") public ResponseEntity<?> subir(@PathVariable UUID detalleId,@RequestParam("archivo") MultipartFile archivo){TenantUserDetails u=AuthService.getAuthenticatedUser();if(u==null)return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();var guardado=archivos.guardar(u.getEmpresaId(),detalleId,u.getUsuarioId(),archivo);return ResponseEntity.ok(java.util.Map.of("id",guardado.getId(),"nombre",guardado.getNombreOriginal()));} @GetMapping("/archivos/{id}") public ResponseEntity<ByteArrayResource> ver(@PathVariable UUID id){TenantUserDetails u=AuthService.getAuthenticatedUser();if(u==null)return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();var archivo=archivos.buscar(u.getEmpresaId(),id);return ResponseEntity.ok().contentType(MediaType.parseMediaType(archivo.getMimeType())).header(HttpHeaders.CONTENT_DISPOSITION,"inline; filename=\""+archivo.getNombreOriginal().replace("\"","")+"\"").body(new ByteArrayResource(archivos.contenido(u.getEmpresaId(),id)));} }
+
+import com.citacloud.app.security.*;
+import com.citacloud.app.services.ArchivoResultadoEstudioService;
+import jakarta.annotation.security.PermitAll;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/resultados-estudios")
+@PermitAll
+public class ArchivoResultadoEstudioController {
+    private final ArchivoResultadoEstudioService archivos;
+
+    public ArchivoResultadoEstudioController(ArchivoResultadoEstudioService a) {
+        archivos = a;
+    }
+
+    @PostMapping("/{detalleId}/archivos")
+    public ResponseEntity<?> subir(@PathVariable UUID detalleId, @RequestParam("archivo") MultipartFile archivo) {
+        TenantUserDetails u = AuthService.getAuthenticatedUser();
+        if (u == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        var guardado = archivos.guardar(u.getEmpresaId(), detalleId, u.getUsuarioId(), archivo);
+        return ResponseEntity.ok(java.util.Map.of("id", guardado.getId(), "nombre", guardado.getNombreOriginal()));
+    }
+
+    @GetMapping("/archivos/{id}")
+    public ResponseEntity<ByteArrayResource> ver(@PathVariable UUID id) {
+        TenantUserDetails u = AuthService.getAuthenticatedUser();
+        if (u == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        var archivo = archivos.buscar(u.getEmpresaId(), id);
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType(archivo.getMimeType())).header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + archivo.getNombreOriginal().replace("\"", "") + "\"").body(new ByteArrayResource(archivos.contenido(u.getEmpresaId(), id)));
+    }
+}

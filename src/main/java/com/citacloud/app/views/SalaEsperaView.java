@@ -1,2 +1,44 @@
-package com.citacloud.app.views; import com.citacloud.app.models.*; import com.citacloud.app.security.*; import com.citacloud.app.services.CitaService; import com.vaadin.flow.component.button.Button; import com.vaadin.flow.component.grid.Grid; import com.vaadin.flow.component.html.*; import com.vaadin.flow.component.notification.Notification; import com.vaadin.flow.component.orderedlayout.VerticalLayout; import com.vaadin.flow.router.*; import jakarta.annotation.security.PermitAll; import java.util.*;
-@Route(value="sala-espera",layout=MainLayout.class) @PageTitle("Sala de espera | CitaCloud") @PermitAll public class SalaEsperaView extends VerticalLayout {public SalaEsperaView(CitaService service){TenantUserDetails u=AuthService.getAuthenticatedUser();UUID empresa=u==null?null:u.getEmpresaId();setSizeFull();setPadding(true);add(new H2("Sala de espera"),new Paragraph("Pacientes en espera de atención."));Grid<Cita> grid=new Grid<>(Cita.class,false);grid.addColumn(c->c.getPaciente().getNombreCompleto()).setHeader("PACIENTE");grid.addColumn(c->c.getMedico().getNombreCompleto()).setHeader("MÉDICO");grid.addColumn(Cita::getHoraInicio).setHeader("HORA");grid.addColumn(c->c.getConsultorio()==null?"—":c.getConsultorio().getNombre()).setHeader("CONSULTORIO");grid.addComponentColumn(c->new Button("Iniciar consulta",e->{try{service.cambiarEstadoClinico(empresa,c.getId(),u.getUsuarioId(),true,false,false,"EN_CONSULTA");Notification.show("Consulta iniciada.");getUI().ifPresent(ui->ui.getPage().reload());}catch(Exception x){Notification.show(x.getMessage());}})).setHeader("ACCIÓN");grid.setItems(empresa==null?List.of():service.listarPorEmpresa(empresa).stream().filter(c->"EN_ESPERA".equals(c.getEstado())).toList());grid.setWidthFull();add(grid);}}
+package com.citacloud.app.views;
+
+import com.citacloud.app.models.*;
+import com.citacloud.app.security.*;
+import com.citacloud.app.services.CitaService;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.*;
+import jakarta.annotation.security.PermitAll;
+
+import java.util.*;
+
+@Route(value = "sala-espera", layout = MainLayout.class)
+@PageTitle("Sala de espera | CitaCloud")
+@PermitAll
+public class SalaEsperaView extends VerticalLayout {
+    public SalaEsperaView(CitaService service) {
+        TenantUserDetails u = AuthService.getAuthenticatedUser();
+        UUID empresa = u == null ? null : u.getEmpresaId();
+        setSizeFull();
+        setPadding(true);
+        add(new H2("Sala de espera"), new Paragraph("Pacientes en espera de atención."));
+        Grid<Cita> grid = new Grid<>(Cita.class, false);
+        grid.addColumn(c -> c.getPaciente().getNombreCompleto()).setHeader("PACIENTE");
+        grid.addColumn(c -> c.getMedico().getNombreCompleto()).setHeader("MÉDICO");
+        grid.addColumn(Cita::getHoraInicio).setHeader("HORA");
+        grid.addColumn(c -> c.getConsultorio() == null ? "—" : c.getConsultorio().getNombre()).setHeader("CONSULTORIO");
+        grid.addComponentColumn(c -> new Button("Iniciar consulta", e -> {
+            try {
+                service.cambiarEstadoClinico(empresa, c.getId(), u.getUsuarioId(), true, false, false, "EN_CONSULTA");
+                Notification.show("Consulta iniciada.");
+                getUI().ifPresent(ui -> ui.getPage().reload());
+            } catch (Exception x) {
+                Notification.show(x.getMessage());
+            }
+        })).setHeader("ACCIÓN");
+        grid.setItems(empresa == null ? List.of() : service.listarPorEmpresa(empresa).stream().filter(c -> "EN_ESPERA".equals(c.getEstado())).toList());
+        grid.setWidthFull();
+        add(grid);
+    }
+}
