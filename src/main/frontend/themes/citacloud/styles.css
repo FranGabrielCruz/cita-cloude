@@ -370,3 +370,14 @@ vaadin-side-nav-item.sidebar-section::part(link) {
   border: 1px solid #475569;
   color: #bfdbfe !important;
 }
+
+/* Los menús contextuales de tablas dentro de diálogos deben quedar por encima del footer fijo. */
+vaadin-context-menu-overlay,
+vaadin-menu-bar-overlay {
+  z-index: 1000 !important;
+}
+
+/* El drawer siempre debe estar por delante del footer fijo del contenido. */
+vaadin-app-layout::part(drawer) {
+  z-index: 2;
+}

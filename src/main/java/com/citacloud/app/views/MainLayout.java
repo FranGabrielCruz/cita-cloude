@@ -52,6 +52,7 @@ public class MainLayout extends AppLayout {
         getElement().executeJs("const oscuro = localStorage.getItem('citacloud.modoOscuro') === 'true'; this.$server.sincronizarModoOscuro(oscuro);");
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
+        setDrawerOpened(false);
         addHeaderContent();
         addBodyFooter();
         addAttachListener(evento -> suscribirNotificaciones(evento.getUI()));
@@ -269,6 +270,7 @@ public class MainLayout extends AppLayout {
 
         SideNav navigation = createNavigation();
         navigation.addClassNames(LumoUtility.Padding.SMALL);
+        navigation.getElement().addEventListener("click", event -> setDrawerOpened(false));
         // AppLayout ya controla el desplazamiento del drawer; un Scroller aquí
         // producía una segunda barra vertical.
         addToDrawer(header, navigation);
@@ -284,7 +286,7 @@ public class MainLayout extends AppLayout {
                 .set("bottom", "0")
                 .set("min-height", "2.75rem")
                 // El contenido reserva altura inferior antes de este pie fijo.
-                .set("z-index", "1")
+                .set("z-index", "0")
                 .set("padding", "0.55rem 1.5rem")
                 .set("background-color", "#ffffff")
                 .set("color", "#64748b")

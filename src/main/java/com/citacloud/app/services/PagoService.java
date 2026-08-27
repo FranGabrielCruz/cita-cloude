@@ -26,6 +26,8 @@ public class PagoService {
     @Transactional(readOnly=true) public List<Pago> listar(UUID empresa){return empresa==null?List.of():pagos.findByEmpresaIdOrderByCreadoEnDesc(empresa);}
     @Transactional(readOnly=true) public Pago obtener(UUID empresa,UUID pagoId){return pagos.findByIdAndEmpresaId(pagoId,empresa).orElseThrow(()->new IllegalArgumentException("Pago no encontrado para esta empresa."));}
     @Transactional(readOnly=true) public List<PagoAplicacion> aplicaciones(UUID empresa,UUID pagoId){obtener(empresa,pagoId);return aplicaciones.findByEmpresaIdAndPagoId(empresa,pagoId);}
+    @Transactional(readOnly=true) public BigDecimal totalReembolsado(UUID empresa,UUID pagoId){obtener(empresa,pagoId);return dinero(reembolsos.totalPorPago(empresa,pagoId));}
+    @Transactional(readOnly=true) public BigDecimal disponibleReembolso(UUID empresa,UUID pagoId){Pago pago=obtener(empresa,pagoId);return dinero(n(pago.getMonto()).subtract(totalReembolsado(empresa,pagoId)).max(BigDecimal.ZERO));}
     @Transactional(readOnly=true) public byte[] generarRecibo(UUID empresa,UUID pagoId){
         Pago pago=obtener(empresa,pagoId); Empresa entidad=empresas.findById(empresa).orElseThrow(()->new IllegalArgumentException("Empresa no encontrada."));
         List<PagoAplicacion> aplicacionesPago=aplicaciones(empresa,pagoId); NumberFormat moneda=NumberFormat.getNumberInstance(Locale.US); moneda.setMinimumFractionDigits(2); moneda.setMaximumFractionDigits(2);
