@@ -4,6 +4,7 @@ import com.citacloud.app.models.Servicio;
 import com.citacloud.app.security.*;
 import com.citacloud.app.services.ServicioService;
 import com.citacloud.app.views.components.PaginadorTabla;
+import com.citacloud.app.util.FormatoMonto;
 import com.vaadin.flow.component.button.*;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -132,11 +133,11 @@ public class ServiciosView extends VerticalLayout {
     }
 
     private BigDecimal obtenerPrecio(String valor) {
-        return new BigDecimal(valor.replace(",", "").trim());
+        return FormatoMonto.parse(valor);
     }
 
     private String formatearPrecio(BigDecimal valor) {
-        return new DecimalFormat("#,##0.00", DecimalFormatSymbols.getInstance(Locale.US)).format(valor);
+        return FormatoMonto.format(valor);
     }
 
     String money(BigDecimal v) {

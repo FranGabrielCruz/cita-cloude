@@ -36,7 +36,7 @@ public class PaginadorTabla<T> extends HorizontalLayout {
                 .set("flex-wrap", "wrap").set("gap", "0.75rem");
 
         filasPorPagina.setAriaLabel("Filas por página");
-        filasPorPagina.setItems(10, 20, 25, 50, 100);
+        filasPorPagina.setItems(5, 10, 20, 25, 50, 100);
         filasPorPagina.setValue(10);
         filasPorPagina.setWidth("80px");
         filasPorPagina.setAllowCustomValue(false);

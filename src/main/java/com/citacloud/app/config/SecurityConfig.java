@@ -14,6 +14,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class SecurityConfig extends VaadinWebSecurity {
 
+    private final ApiSecurityErrorWriter apiSecurityErrorWriter;
+
+    public SecurityConfig(ApiSecurityErrorWriter apiSecurityErrorWriter) {
+        this.apiSecurityErrorWriter = apiSecurityErrorWriter;
+    }
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
@@ -32,6 +38,21 @@ public class SecurityConfig extends VaadinWebSecurity {
         http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
 
         super.configure(http);
+        http.exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint((request, response, exception) -> {
+                    if (request.getRequestURI().startsWith("/api/")) {
+                        apiSecurityErrorWriter.write(request, response, org.springframework.http.HttpStatus.UNAUTHORIZED);
+                    } else {
+                        response.sendRedirect("/login");
+                    }
+                })
+                .accessDeniedHandler((request, response, exception) -> {
+                    if (request.getRequestURI().startsWith("/api/")) {
+                        apiSecurityErrorWriter.write(request, response, org.springframework.http.HttpStatus.FORBIDDEN);
+                    } else {
+                        response.sendError(org.springframework.http.HttpStatus.FORBIDDEN.value());
+                    }
+                }));
         setLoginView(http, LoginView.class);
     }
 

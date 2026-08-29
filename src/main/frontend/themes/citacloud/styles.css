@@ -381,3 +381,54 @@ vaadin-menu-bar-overlay {
 vaadin-app-layout::part(drawer) {
   z-index: 2;
 }
+/* El código del producto en el detalle debe permanecer visualmente separado de su estado. */
+vaadin-dialog-overlay h2 + span {
+  display: block;
+  margin-top: 0.25rem;
+  margin-bottom: 0.7rem;
+}
+
+/* Inventario usa el mismo tamaño estándar del botón Nueva cita. */
+vaadin-button[aria-label="Nuevo producto"], vaadin-button[title="Nuevo producto"],
+vaadin-button[aria-label="Nueva unidad"], vaadin-button[title="Nueva unidad"],
+vaadin-button[aria-label="Nueva categoría"], vaadin-button[title="Nueva categoría"],
+vaadin-button[aria-label="Movimientos"], vaadin-button[title="Movimientos"] {
+  min-width: auto !important;
+  height: auto !important;
+}
+
+/* Los botones de acción principales conservan las dimensiones estándar de Vaadin, igual que Nueva cita. */
+vaadin-button[theme~="primary"] {
+  min-width: var(--vaadin-button-size, 2.5em) !important;
+  height: var(--vaadin-button-size, 2.5em) !important;
+}
+
+/* Cancelar y cerrar mantienen el mismo tamaño que las acciones principales. */
+vaadin-button[aria-label="Cancelar"], vaadin-button[title="Cancelar"],
+vaadin-button[aria-label="Cerrar"], vaadin-button[title="Cerrar"] {
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  padding: 0 !important;
+}
+
+vaadin-dialog-overlay vaadin-button:not([theme~="primary"]) {
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  padding: 0 !important;
+}
+
+/* Los botones insertados en el footer del diálogo no exponen el tooltip como atributo. */
+vaadin-dialog-overlay::part(footer) vaadin-button {
+  min-width: var(--vaadin-button-size, 2.5em) !important;
+  height: var(--vaadin-button-size, 2.5em) !important;
+}
+
+/* Los botones de footer son contenido asignado al overlay: fijamos ambas dimensiones. */
