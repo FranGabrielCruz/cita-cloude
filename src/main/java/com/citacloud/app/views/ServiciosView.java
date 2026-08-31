@@ -46,7 +46,7 @@ public class ServiciosView extends VerticalLayout {
         Button nuevo = new Button(VaadinIcon.PLUS.create(), e -> form(null));
         nuevo.setTooltipText("Nuevo servicio");
         nuevo.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        nuevo.getStyle().set("background", "#2563eb").set("color", "white");
+        nuevo.getStyle().set("background", "#16a34a").set("color", "white");
         HorizontalLayout head = new HorizontalLayout(new H2("SERVICIOS"), nuevo);
         head.setWidthFull();
         head.setJustifyContentMode(JustifyContentMode.BETWEEN);

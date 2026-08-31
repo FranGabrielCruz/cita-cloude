@@ -33,7 +33,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 public class MainLayout extends AppLayout {
 
     // Reserva suficiente espacio para que las vistas largas y sus paginadores no queden bajo el pie fijo.
-    private static final String ESPACIO_FOOTER = "7rem";
+    private static final String ESPACIO_FOOTER = "5.5rem";
     private static final String MODO_OSCURO = "citacloud.modoOscuro";
     private final EmpresaService empresaService;
     private final UsuarioService usuarioService;
@@ -286,7 +286,7 @@ public class MainLayout extends AppLayout {
                 .set("bottom", "0")
                 .set("min-height", "2.75rem")
                 // El contenido reserva altura inferior antes de este pie fijo.
-                .set("z-index", "0")
+                .set("z-index", "10")
                 .set("padding", "0.55rem 1.5rem")
                 .set("background-color", "#ffffff")
                 .set("color", "#64748b")
@@ -304,6 +304,7 @@ public class MainLayout extends AppLayout {
     public void showRouterLayoutContent(HasElement content) {
         content.getElement().getStyle()
                 .set("padding-bottom", ESPACIO_FOOTER)
+                .set("margin-bottom", ESPACIO_FOOTER)
                 .set("box-sizing", "border-box");
         super.showRouterLayoutContent(content);
     }
@@ -349,9 +350,7 @@ public class MainLayout extends AppLayout {
         }
         nav.addItem(new SideNavItem("Pagos", "pagos", VaadinIcon.CREDIT_CARD.create()));
         nav.addItem(new SideNavItem("Cuentas por cobrar", "cuentas-por-cobrar", VaadinIcon.DOLLAR.create()));
-        nav.addItem(new SideNavItem("ARS", "ars", VaadinIcon.UMBRELLA.create()));
         nav.addItem(new SideNavItem("Inventario", "inventario", VaadinIcon.PACKAGE.create()));
-        nav.addItem(new SideNavItem("Farmacia", "farmacia", VaadinIcon.PILLS.create()));
         nav.addItem(new SideNavItem("Laboratorio", "laboratorio", VaadinIcon.FLASK.create()));
         nav.addItem(new SideNavItem("Reportes financieros", "reportes-financieros", VaadinIcon.CHART_LINE.create()));
         SideNavItem gestionControl = new SideNavItem("GESTIÓN Y CONTROL");
@@ -381,7 +380,7 @@ public class MainLayout extends AppLayout {
         String[] permisos = {"MENU_DASHBOARD", null, "MENU_MI_AGENDA", "MENU_CITAS", "MENU_PACIENTES", "MENU_MEDICOS",
                 "MENU_ESPECIALIDADES", "MENU_HORARIOS", "MENU_CONSULTORIOS", "MENU_SEGUROS", "MENU_SERVICIOS", null,
                 "MENU_USUARIOS", "MENU_ROLES", null, null, "MENU_SIGNOS_VITALES", "MENU_CONSULTA_MEDICA", "MENU_EXPEDIENTE_CLINICO", "MENU_ANTECEDENTES", "MENU_ALERGIAS", "MENU_DIAGNOSTICOS", "MENU_TRATAMIENTOS", "MENU_RECETAS", "MENU_ORDENES_ESTUDIOS", "MENU_RECORDATORIOS",
-                "MENU_DOCUMENTOS", null, "MENU_FACTURACION", "MENU_ECF", "MENU_CAJA", "MENU_PAGOS", "MENU_CUENTAS_COBRAR", "MENU_ARS", "MENU_INVENTARIO", "MENU_FARMACIA", "MENU_LABORATORIO", "MENU_REPORTES_FINANCIEROS", null, "MENU_REPORTES", "MENU_GESTION_CONTROL", "MENU_AUDITORIA", null};
+                "MENU_DOCUMENTOS", null, "MENU_FACTURACION", "MENU_ECF", "MENU_CAJA", "MENU_PAGOS", "MENU_CUENTAS_COBRAR", "MENU_INVENTARIO", "MENU_LABORATORIO", "MENU_REPORTES_FINANCIEROS", null, "MENU_REPORTES", "MENU_GESTION_CONTROL", "MENU_AUDITORIA", null};
         var elementos = nav.getElement().getChildren().toList();
         boolean puedeAccederRecepcion = esAdministrador || usuario.getAuthorities().stream()
                 .anyMatch(authority -> "MENU_APROBACION_CITAS".equals(authority.getAuthority())

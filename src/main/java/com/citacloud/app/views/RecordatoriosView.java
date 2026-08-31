@@ -46,8 +46,7 @@ public class RecordatoriosView extends VerticalLayout {
         setPadding(true);
         // El pie es fijo; la reserva y el desplazamiento evitan que cubra las últimas tarjetas.
         getStyle().set("max-width", "1180px").set("margin", "0 auto")
-                .set("padding-bottom", "13rem").set("box-sizing", "border-box")
-                .set("overflow-y", "auto");
+                .set("padding-bottom", "13rem").set("box-sizing", "border-box");
 
         Button leerTodas = new Button("Marcar todas como leídas", e -> {
             if (empresaId != null && usuarioId != null) servicio.leerTodas(empresaId, usuarioId);

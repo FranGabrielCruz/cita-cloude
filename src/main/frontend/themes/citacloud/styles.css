@@ -379,7 +379,7 @@ vaadin-menu-bar-overlay {
 
 /* El drawer siempre debe estar por delante del footer fijo del contenido. */
 vaadin-app-layout::part(drawer) {
-  z-index: 2;
+  z-index: 20;
 }
 /* El código del producto en el detalle debe permanecer visualmente separado de su estado. */
 vaadin-dialog-overlay h2 + span {
@@ -429,6 +429,22 @@ vaadin-dialog-overlay vaadin-button:not([theme~="primary"]) {
 vaadin-dialog-overlay::part(footer) vaadin-button {
   min-width: var(--vaadin-button-size, 2.5em) !important;
   height: var(--vaadin-button-size, 2.5em) !important;
+}
+
+vaadin-dialog-overlay::part(footer) vaadin-button:last-child {
+  background-color: #e2e8f0 !important;
+  color: #000000 !important;
+}
+
+/* Laboratorio: la validación se ejecuta desde el historial, no desde el formulario. */
+vaadin-button[aria-label="Enviar a validación"] {
+  display: none !important;
+}
+
+vaadin-button[aria-label="Abrir Caja"],
+vaadin-button[aria-label="Registrar pago"] {
+  background-color: #16a34a !important;
+  color: #ffffff !important;
 }
 
 /* Los botones de footer son contenido asignado al overlay: fijamos ambas dimensiones. */
