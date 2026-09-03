@@ -3,11 +3,13 @@ package com.citacloud.app.views;
 import com.citacloud.app.models.Empresa;
 import com.citacloud.app.models.Sucursal;
 import com.citacloud.app.models.ConfiguracionEmpresaFase2;
+import com.citacloud.app.models.SecuenciaComprobanteFiscal;
 import com.citacloud.app.security.AuthService;
 import com.citacloud.app.security.TenantUserDetails;
 import com.citacloud.app.services.EmpresaService;
 import com.citacloud.app.services.SucursalService;
 import com.citacloud.app.services.ConfiguracionFase2Service;
+import com.citacloud.app.services.SecuenciaComprobanteFiscalService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -44,14 +46,17 @@ public class ConfiguracionView extends VerticalLayout {
     private final EmpresaService empresaService;
     private final SucursalService sucursalService;
     private final ConfiguracionFase2Service configuracionFase2Service;
+    private final SecuenciaComprobanteFiscalService secuenciasFiscales;
     private final UUID empresaId;
     private final Grid<Sucursal> sucursales = new Grid<>(Sucursal.class, false);
 
     public ConfiguracionView(EmpresaService empresaService, SucursalService sucursalService,
-                             ConfiguracionFase2Service configuracionFase2Service) {
+                             ConfiguracionFase2Service configuracionFase2Service,
+                             SecuenciaComprobanteFiscalService secuenciasFiscales) {
         this.empresaService = empresaService;
         this.sucursalService = sucursalService;
         this.configuracionFase2Service = configuracionFase2Service;
+        this.secuenciasFiscales = secuenciasFiscales;
         TenantUserDetails usuario = AuthService.getAuthenticatedUser();
         empresaId = usuario == null ? null : usuario.getEmpresaId();
 
@@ -66,7 +71,44 @@ public class ConfiguracionView extends VerticalLayout {
         HorizontalLayout encabezado = new HorizontalLayout(titulo, datosInstitucion.guardar());
         encabezado.setWidthFull(); encabezado.setAlignItems(FlexComponent.Alignment.CENTER);
         encabezado.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
-        add(encabezado, datosInstitucion.tarjeta(), crearPreferenciasOperativas(), crearSucursales());
+        add(encabezado, datosInstitucion.tarjeta(), crearPreferenciasOperativas(), crearSecuenciasFiscales(), crearSucursales());
+    }
+
+    private VerticalLayout crearSecuenciasFiscales() {
+        VerticalLayout tarjeta = tarjeta();
+        H3 titulo = new H3("Secuencias de comprobantes fiscales"); titulo.getStyle().set("margin", "0");
+        Span ayuda = new Span("Configura el rango desde/hasta que utilizará cada tipo de comprobante al emitir una factura.");
+        ayuda.getStyle().set("color", "#64748b");
+        Grid<SecuenciaComprobanteFiscal> tabla = new Grid<>(SecuenciaComprobanteFiscal.class, false);
+        tabla.addColumn(SecuenciaComprobanteFiscal::getNombre).setHeader("TIPO").setFlexGrow(1);
+        tabla.addColumn(SecuenciaComprobanteFiscal::getPrefijo).setHeader("PREFIJO").setAutoWidth(true);
+        tabla.addColumn(SecuenciaComprobanteFiscal::getNumeroDesde).setHeader("DESDE").setAutoWidth(true);
+        tabla.addColumn(SecuenciaComprobanteFiscal::getNumeroHasta).setHeader("HASTA").setAutoWidth(true);
+        tabla.addColumn(SecuenciaComprobanteFiscal::getNumeroSiguiente).setHeader("SIGUIENTE").setAutoWidth(true);
+        tabla.addComponentColumn(s -> { Span estado = new Span(Boolean.TRUE.equals(s.getActiva()) ? "Activa" : "Inactiva"); estado.addClassName(Boolean.TRUE.equals(s.getActiva()) ? "badge-activo" : "badge-inactivo"); return estado; }).setHeader("ESTADO").setAutoWidth(true);
+        tabla.addComponentColumn(s -> { Button editar = botonIcono(VaadinIcon.EDIT.create(), "Editar secuencia", "transparent", "#2563eb"); editar.addClickListener(e -> abrirSecuenciaFiscal(tabla, s)); return editar; }).setHeader("ACCIONES").setAutoWidth(true);
+        tabla.setAllRowsVisible(true); tabla.setWidthFull();
+        Runnable cargar = () -> tabla.setItems(empresaId == null ? List.of() : secuenciasFiscales.listar(empresaId));
+        tabla.getElement().setProperty("cargarSecuencias", "true"); cargar.run();
+        Button nueva = botonIcono(VaadinIcon.PLUS.create(), "Nueva secuencia fiscal", "#16a34a", "white");
+        nueva.addClickListener(e -> abrirSecuenciaFiscal(tabla, null));
+        HorizontalLayout encabezado = new HorizontalLayout(new VerticalLayout(titulo, ayuda), nueva); encabezado.setWidthFull(); encabezado.setAlignItems(FlexComponent.Alignment.CENTER); encabezado.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN); encabezado.getComponentAt(0).getElement().getStyle().set("padding", "0");
+        tarjeta.add(encabezado, tabla);
+        return tarjeta;
+    }
+
+    private void abrirSecuenciaFiscal(Grid<SecuenciaComprobanteFiscal> tabla, SecuenciaComprobanteFiscal existente) {
+        Dialog dialogo = new Dialog(); dialogo.setHeaderTitle(existente == null ? "Nueva secuencia fiscal" : "Editar secuencia fiscal"); dialogo.setWidth("min(680px,95vw)");
+        ComboBox<String> tipo = new ComboBox<>("Tipo/comprobante fiscal *"); tipo.setItems(SecuenciaComprobanteFiscalService.TIPOS.keySet()); tipo.setItemLabelGenerator(SecuenciaComprobanteFiscalService::etiqueta);
+        TextField prefijo = new TextField("Prefijo *"); prefijo.setHelperText("Ejemplo: B01 o E31");
+        TextField desde = new TextField("Secuencia desde *"); TextField hasta = new TextField("Secuencia hasta *");
+        Checkbox activa = new Checkbox("Secuencia activa", true);
+        if (existente != null) { tipo.setValue(existente.getTipo()); prefijo.setValue(valor(existente.getPrefijo())); desde.setValue(String.valueOf(existente.getNumeroDesde())); hasta.setValue(String.valueOf(existente.getNumeroHasta())); activa.setValue(Boolean.TRUE.equals(existente.getActiva())); }
+        FormLayout formulario = new FormLayout(tipo, prefijo, desde, hasta, activa); formulario.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1), new FormLayout.ResponsiveStep("560px", 2));
+        Button guardar = botonIcono(VaadinIcon.DISC.create(), "Guardar secuencia", "#16a34a", "white");
+        guardar.addClickListener(e -> { try { secuenciasFiscales.guardar(empresaId, existente == null ? null : existente.getId(), tipo.getValue(), prefijo.getValue(), Long.parseLong(desde.getValue().trim()), Long.parseLong(hasta.getValue().trim()), activa.getValue()); tabla.setItems(secuenciasFiscales.listar(empresaId)); dialogo.close(); Notification.show("Secuencia fiscal guardada.", 3000, Notification.Position.BOTTOM_START); } catch (NumberFormatException ex) { Notification.show("Las secuencias desde y hasta deben contener solo números enteros.", 4000, Notification.Position.MIDDLE); } catch (IllegalArgumentException ex) { Notification.show(ex.getMessage(), 4000, Notification.Position.MIDDLE); } });
+        Button cerrar = botonIcono(VaadinIcon.CLOSE.create(), "Cerrar", "#e2e8f0", "#1e293b"); cerrar.addClickListener(e -> dialogo.close());
+        dialogo.add(formulario); dialogo.getFooter().add(guardar, cerrar); dialogo.open();
     }
 
     private VerticalLayout crearPreferenciasOperativas() {

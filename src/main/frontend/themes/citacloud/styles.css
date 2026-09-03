@@ -448,3 +448,144 @@ vaadin-button[aria-label="Registrar pago"] {
 }
 
 /* Los botones de footer son contenido asignado al overlay: fijamos ambas dimensiones. */
+
+/* Facturacion: tabla flexible, acciones compactas y soporte real de modo oscuro. */
+.facturacion-view .facturacion-indicador h3,
+.facturacion-view .facturacion-indicador span {
+  margin: 0;
+}
+
+.facturacion-view .facturacion-indicador span {
+  display: block;
+  color: var(--lumo-secondary-text-color);
+  font-size: var(--lumo-font-size-s);
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+.facturacion-view .facturacion-indicador h3 {
+  margin-top: .45rem;
+  color: var(--lumo-body-text-color);
+}
+
+.facturacion-caja-contexto {
+  white-space: nowrap;
+  font-size: var(--lumo-font-size-s);
+}
+
+.facturacion-resumen {
+  margin-left: auto;
+  width: min(100%, 390px);
+  padding: 1rem 1.2rem;
+  box-sizing: border-box;
+  border-radius: var(--lumo-border-radius-l);
+  background: var(--lumo-contrast-5pct);
+  border: 1px solid var(--lumo-contrast-10pct);
+}
+
+.facturacion-resumen p,
+.facturacion-resumen h3 {
+  margin: .4rem 0;
+}
+
+.accion-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--lumo-primary-text-color);
+  padding: var(--lumo-space-xs);
+  text-decoration: none;
+}
+
+/* Acciones del pie de la factura: botones visibles, consistentes y accesibles. */
+.factura-footer-acciones {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .65rem;
+}
+
+.factura-footer-boton {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  padding: 0 !important;
+  border-radius: 9px !important;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 18%) !important;
+}
+
+vaadin-button.factura-footer-editar {
+  background-color: #2563eb !important;
+  border: 1px solid #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+vaadin-button.factura-footer-emitir {
+  background-color: #16a34a !important;
+  border: 1px solid #15803d !important;
+  color: #ffffff !important;
+}
+
+vaadin-button.factura-footer-pago {
+  background-color: #16a34a !important;
+  border: 1px solid #15803d !important;
+  color: #ffffff !important;
+}
+
+.factura-footer-imprimir {
+  align-self: center;
+  line-height: 0;
+  margin: 0 !important;
+  background-color: #2563eb !important;
+  border: 1px solid #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+.factura-footer-imprimir vaadin-icon {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+vaadin-button.factura-footer-anular {
+  background-color: #dc2626 !important;
+  border: 1px solid #b91c1c !important;
+  color: #ffffff !important;
+}
+
+vaadin-button.factura-footer-cancelar {
+  background-color: #e2e8f0 !important;
+  border: 1px solid #94a3b8 !important;
+  color: #000000 !important;
+}
+
+.modo-oscuro .facturacion-paginacion,
+.modo-oscuro .facturacion-tabla,
+.modo-oscuro .facturacion-resumen {
+  color: var(--lumo-body-text-color);
+}
+
+@media (max-width: 700px) {
+  .facturacion-view {
+    padding: var(--lumo-space-s) !important;
+  }
+
+  .facturacion-view .facturacion-indicadores {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .facturacion-view .facturacion-paginacion {
+    align-items: flex-start !important;
+    flex-direction: column;
+  }
+
+  .facturacion-view vaadin-grid-cell-content {
+    padding-left: var(--lumo-space-xs);
+    padding-right: var(--lumo-space-xs);
+  }
+}
