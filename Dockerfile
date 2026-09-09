@@ -7,17 +7,22 @@ RUN mvn -B -q dependency:go-offline
 
 COPY src/ src/
 COPY package.json package-lock.json vite.config.ts tsconfig.json ./
-RUN mvn -B -Pproduction -DskipTests package
+RUN mvn -B -Pproduction -DskipTests clean package
 
 # The runtime image contains only the JRE and the assembled application.
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
-RUN useradd --system --create-home --uid 10001 citacloud
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --system --create-home --uid 10001 citacloud
 
 COPY --from=build /workspace/target/*.jar app.jar
 RUN mkdir /app/uploads && chown -R citacloud:citacloud /app
 
 USER citacloud
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+  CMD curl --fail --silent http://localhost:8080/health/ready || exit 1
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

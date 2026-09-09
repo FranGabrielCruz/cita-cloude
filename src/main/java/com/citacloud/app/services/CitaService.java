@@ -4,6 +4,7 @@ import com.citacloud.app.models.Cita;
 import com.citacloud.app.repositories.CitaRepository;
 import com.citacloud.app.repositories.MedicoRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,15 +20,19 @@ public class CitaService {
     private final ConfiguracionFase2Service configuracionFase2Service;
     private final NotificacionService notificaciones;
     private final AuditoriaService auditoria;
+    private final NotificacionCitaOutboxService notificacionesPaciente;
 
     public CitaService(CitaRepository citaRepository, DisponibilidadService disponibilidadService,
-                       MedicoRepository medicoRepository, ConfiguracionFase2Service configuracionFase2Service, NotificacionService notificaciones, AuditoriaService auditoria) {
+                       MedicoRepository medicoRepository, ConfiguracionFase2Service configuracionFase2Service,
+                       NotificacionService notificaciones, AuditoriaService auditoria,
+                       NotificacionCitaOutboxService notificacionesPaciente) {
         this.citaRepository = citaRepository;
         this.disponibilidadService = disponibilidadService;
         this.medicoRepository = medicoRepository;
         this.configuracionFase2Service = configuracionFase2Service;
         this.notificaciones = notificaciones;
         this.auditoria = auditoria;
+        this.notificacionesPaciente = notificacionesPaciente;
     }
 
     public List<Cita> listarPorEmpresa(UUID empresaId) {
@@ -52,6 +57,7 @@ public class CitaService {
      * Registra una cita verificando que todos los datos pertenecen a la empresa
      * autenticada y que el médico no tenga otro turno en el mismo intervalo.
      */
+    @Transactional
     public Cita registrar(UUID empresaId, Cita cita) {
         if (cita == null || cita.getFecha() == null || cita.getHoraInicio() == null) {
             throw new IllegalArgumentException("Completa la fecha y hora de la cita.");
@@ -82,6 +88,7 @@ public class CitaService {
                             + " tiene una cita confirmada para el " + guardada.getFecha() + ".",
                     guardada, null);
         }
+        notificacionesPaciente.registrarCitaCreada(guardada);
         return guardada;
     }
 

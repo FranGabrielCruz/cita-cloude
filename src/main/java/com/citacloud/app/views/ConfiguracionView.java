@@ -10,6 +10,8 @@ import com.citacloud.app.services.EmpresaService;
 import com.citacloud.app.services.SucursalService;
 import com.citacloud.app.services.ConfiguracionFase2Service;
 import com.citacloud.app.services.SecuenciaComprobanteFiscalService;
+import com.citacloud.app.services.ConfiguracionNotificacionCitaService;
+import com.citacloud.app.models.ConfiguracionNotificacionCita;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -47,16 +49,19 @@ public class ConfiguracionView extends VerticalLayout {
     private final SucursalService sucursalService;
     private final ConfiguracionFase2Service configuracionFase2Service;
     private final SecuenciaComprobanteFiscalService secuenciasFiscales;
+    private final ConfiguracionNotificacionCitaService notificacionesCitas;
     private final UUID empresaId;
     private final Grid<Sucursal> sucursales = new Grid<>(Sucursal.class, false);
 
     public ConfiguracionView(EmpresaService empresaService, SucursalService sucursalService,
                              ConfiguracionFase2Service configuracionFase2Service,
-                             SecuenciaComprobanteFiscalService secuenciasFiscales) {
+                             SecuenciaComprobanteFiscalService secuenciasFiscales,
+                             ConfiguracionNotificacionCitaService notificacionesCitas) {
         this.empresaService = empresaService;
         this.sucursalService = sucursalService;
         this.configuracionFase2Service = configuracionFase2Service;
         this.secuenciasFiscales = secuenciasFiscales;
+        this.notificacionesCitas = notificacionesCitas;
         TenantUserDetails usuario = AuthService.getAuthenticatedUser();
         empresaId = usuario == null ? null : usuario.getEmpresaId();
 
@@ -71,8 +76,40 @@ public class ConfiguracionView extends VerticalLayout {
         HorizontalLayout encabezado = new HorizontalLayout(titulo, datosInstitucion.guardar());
         encabezado.setWidthFull(); encabezado.setAlignItems(FlexComponent.Alignment.CENTER);
         encabezado.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
-        add(encabezado, datosInstitucion.tarjeta(), crearPreferenciasOperativas(), crearSecuenciasFiscales(), crearSucursales());
+        add(encabezado, datosInstitucion.tarjeta(), crearPreferenciasOperativas(), crearNotificacionesCitas(), crearSecuenciasFiscales(), crearSucursales());
     }
+
+    private VerticalLayout crearNotificacionesCitas() {
+        VerticalLayout tarjeta = tarjeta(); tarjeta.addClassName("notification-settings-card");
+        H3 titulo = new H3("Notificaciones de citas"); titulo.getStyle().set("margin", "0");
+        Span ayuda = new Span("Configure los mensajes automáticos enviados a los pacientes al crear una cita."); ayuda.getStyle().set("color", "var(--lumo-secondary-text-color)");
+        ConfiguracionNotificacionCita c = empresaId == null ? new ConfiguracionNotificacionCita() : notificacionesCitas.obtener(empresaId);
+        Checkbox correoActivo = new Checkbox("Enviar correo al crear una cita", c.isCorreoHabilitado()); correoActivo.getElement().setAttribute("theme", "switch");
+        Checkbox whatsappActivo = new Checkbox("Enviar WhatsApp al crear una cita", c.isWhatsappHabilitado()); whatsappActivo.getElement().setAttribute("theme", "switch");
+        Span estadoCorreo = new Span(notificacionesCitas.correoConfigurado(c) ? "Canal configurado" : "Canal no configurado"); estadoCorreo.addClassName(notificacionesCitas.correoConfigurado(c)?"badge-activo":"badge-inactivo");
+        Span estadoWhatsapp = new Span(notificacionesCitas.whatsappConfigurado() ? "Canal configurado" : "Canal no configurado"); estadoWhatsapp.addClassName(notificacionesCitas.whatsappConfigurado()?"badge-activo":"badge-inactivo");
+        HorizontalLayout canales = new HorizontalLayout(new VerticalLayout(correoActivo, estadoCorreo), new VerticalLayout(whatsappActivo, estadoWhatsapp)); canales.setWidthFull(); canales.addClassName("notification-channel-switches");
+        TextField smtpFrom = new TextField("Correo remitente *"); smtpFrom.setValue(valor(c.getSmtpFrom())); smtpFrom.setPlaceholder("citas@clinica.com"); smtpFrom.setWidthFull();
+        TextField smtpUsername = new TextField("Usuario SMTP *"); smtpUsername.setValue(valor(c.getSmtpUsername())); smtpUsername.setPlaceholder("citas@clinica.com"); smtpUsername.setHelperText("La contraseña SMTP se administra de forma segura en el servidor."); smtpUsername.setWidthFull();
+        TextField asunto = new TextField("Asunto *"); asunto.setValue(valor(c.getAsuntoCorreo())); asunto.setWidthFull();
+        TextArea mensajeCorreo = new TextArea("Mensaje *"); mensajeCorreo.setValue(valor(c.getMensajeCorreo())); mensajeCorreo.setWidthFull(); mensajeCorreo.setMinHeight("230px");
+        TextArea mensajeWhatsapp = new TextArea("Mensaje *"); mensajeWhatsapp.setValue(valor(c.getMensajeWhatsapp())); mensajeWhatsapp.setWidthFull(); mensajeWhatsapp.setMinHeight("230px");
+        TextField templateId = new TextField("Referencia de plantilla del proveedor"); templateId.setValue(valor(c.getWhatsappTemplateId())); templateId.setWidthFull();
+        VerticalLayout seccionCorreo = tarjetaCanal("Correo electrónico", smtpFrom, smtpUsername, asunto, mensajeCorreo);
+        VerticalLayout seccionWhatsapp = tarjetaCanal("WhatsApp", mensajeWhatsapp, templateId);
+        HorizontalLayout editores = new HorizontalLayout(seccionCorreo, seccionWhatsapp); editores.setWidthFull(); editores.addClassName("notification-template-editors");
+        TextArea[] editorActivo = {mensajeCorreo}; mensajeCorreo.addFocusListener(e -> editorActivo[0]=mensajeCorreo); mensajeWhatsapp.addFocusListener(e -> editorActivo[0]=mensajeWhatsapp);
+        HorizontalLayout variables = new HorizontalLayout(); variables.setWidthFull(); variables.getStyle().set("flex-wrap", "wrap");
+        java.util.Map<String,String> etiquetas = java.util.Map.of("paciente","Paciente","fecha_cita","Fecha","hora_cita","Hora","medico","Médico","especialidad","Especialidad","sucursal","Sucursal","consultorio","Consultorio","clinica","Clínica");
+        etiquetas.forEach((variable, etiqueta) -> { Button chip = new Button(etiqueta); chip.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_SMALL); chip.addClassName("notification-variable-chip"); chip.setTooltipText("Insertar {{"+variable+"}}"); chip.addClickListener(e -> editorActivo[0].getElement().executeJs("const el=this; const start=el.inputElement.selectionStart ?? el.value.length; const end=el.inputElement.selectionEnd ?? start; el.value=el.value.substring(0,start)+$0+el.value.substring(end); el.dispatchEvent(new Event('input',{bubbles:true})); el.inputElement.focus(); el.inputElement.setSelectionRange(start+$0.length,start+$0.length);", "{{"+variable+"}}")); variables.add(chip); });
+        Button vistaPrevia = botonIcono(VaadinIcon.EYE.create(), "Vista previa", "transparent", "var(--lumo-primary-text-color)"); vistaPrevia.addClickListener(e -> abrirVistaPrevia(asunto.getValue(),mensajeCorreo.getValue(),mensajeWhatsapp.getValue()));
+        Button guardar = botonIcono(VaadinIcon.DISC.create(), "Guardar", "#16a34a", "white"); guardar.addClickListener(e -> {try{notificacionesCitas.guardar(empresaId,correoActivo.getValue(),smtpFrom.getValue(),smtpUsername.getValue(),asunto.getValue(),mensajeCorreo.getValue(),whatsappActivo.getValue(),mensajeWhatsapp.getValue(),templateId.getValue());Notification.show("Configuración de notificaciones guardada.",3000,Notification.Position.BOTTOM_START);}catch(IllegalArgumentException ex){Notification.show(ex.getMessage(),4500,Notification.Position.MIDDLE);}});
+        HorizontalLayout acciones = new HorizontalLayout(vistaPrevia, guardar); acciones.setWidthFull(); acciones.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+        tarjeta.add(titulo, ayuda, canales, editores, new Span("Variables disponibles"), variables, acciones); return tarjeta;
+    }
+
+    private VerticalLayout tarjetaCanal(String titulo, com.vaadin.flow.component.Component... componentes) { H3 h=new H3(titulo);h.getStyle().set("margin","0").set("font-size","1rem");VerticalLayout v=new VerticalLayout();v.addClassName("notification-channel-card");v.setWidthFull();v.add(h);v.add(componentes);return v; }
+    private void abrirVistaPrevia(String asunto,String correo,String whatsapp){try{Dialog d=new Dialog();d.setHeaderTitle("Vista previa");d.setWidth("min(760px,95vw)");Span a=new Span(notificacionesCitas.vistaPrevia(asunto));a.getStyle().set("font-weight","700");com.vaadin.flow.component.html.Pre c=new com.vaadin.flow.component.html.Pre(notificacionesCitas.vistaPrevia(correo));com.vaadin.flow.component.html.Pre w=new com.vaadin.flow.component.html.Pre(notificacionesCitas.vistaPrevia(whatsapp));c.getStyle().set("white-space","pre-wrap").set("font-family","inherit");w.getStyle().set("white-space","pre-wrap").set("font-family","inherit");d.add(new H3("Correo electrónico"),a,c,new H3("WhatsApp"),w);Button cerrar=botonIcono(VaadinIcon.CLOSE.create(),"Cerrar","#e2e8f0","#1e293b");cerrar.addClickListener(e->d.close());d.getFooter().add(cerrar);d.open();}catch(IllegalArgumentException ex){Notification.show(ex.getMessage(),4000,Notification.Position.MIDDLE);}}
 
     private VerticalLayout crearSecuenciasFiscales() {
         VerticalLayout tarjeta = tarjeta();

@@ -7,6 +7,7 @@ import com.citacloud.app.repositories.PacienteRepository;
 import com.citacloud.app.security.AuthService;
 import com.citacloud.app.security.TenantUserDetails;
 import org.springframework.beans.factory.annotation.Value;
+import io.micrometer.core.instrument.Timer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,13 +30,15 @@ public class DocumentoService {
     private final DocumentoRepository repositorio;
     private final PacienteRepository pacientes;
     private final AuditoriaService auditoria;
+    private final MetricasAlmacenamiento metricas;
     private final Path raiz;
 
     public DocumentoService(DocumentoRepository repositorio, PacienteRepository pacientes, AuditoriaService auditoria,
-                            @Value("${app.upload-dir:uploads}") String directorio) {
+                            MetricasAlmacenamiento metricas, @Value("${app.upload-dir:uploads}") String directorio) {
         this.repositorio = repositorio;
         this.pacientes = pacientes;
         this.auditoria = auditoria;
+        this.metricas = metricas;
         raiz = Paths.get(directorio).toAbsolutePath().normalize();
     }
 
@@ -57,7 +60,14 @@ public class DocumentoService {
         Files.createDirectories(carpeta);
         Path destino = carpeta.resolve(UUID.randomUUID() + extension).normalize();
         if (!destino.startsWith(raiz)) throw new IllegalArgumentException("Ruta no válida.");
-        Files.copy(datos, destino, StandardCopyOption.REPLACE_EXISTING);
+        Timer.Sample muestra = metricas.iniciar();
+        try {
+            Files.copy(datos, destino, StandardCopyOption.REPLACE_EXISTING);
+            metricas.escrito(muestra, tamano);
+        } catch (IOException exception) {
+            metricas.fallo(muestra);
+            throw exception;
+        }
 
         Documento documento = new Documento();
         documento.setEmpresaId(empresaId);

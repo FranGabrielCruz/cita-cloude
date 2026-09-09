@@ -589,3 +589,9 @@ vaadin-button.factura-footer-cancelar {
     padding-right: var(--lumo-space-xs);
   }
 }
+
+.notification-channel-switches > vaadin-vertical-layout,
+.notification-channel-card { background: var(--lumo-contrast-5pct); border: 1px solid var(--lumo-contrast-10pct); border-radius: 12px; padding: 1rem; }
+.notification-template-editors { align-items: stretch; }
+.notification-variable-chip { background: var(--lumo-primary-color-10pct); border-radius: 999px; padding-inline: .75rem; }
+@media (max-width: 760px) { .notification-channel-switches, .notification-template-editors { flex-direction: column; } }

@@ -342,7 +342,6 @@ public class MainLayout extends AppLayout {
         gestionFinanciera.addClassName("sidebar-section");
         nav.addItem(gestionFinanciera);
         nav.addItem(new SideNavItem("Facturación", "facturacion", VaadinIcon.INVOICE.create()));
-        nav.addItem(new SideNavItem("e-CF", "e-cf", VaadinIcon.FILE_CODE.create()));
         nav.addItem(new SideNavItem("Cierre Caja", "caja", VaadinIcon.CASH.create()));
         TenantUserDetails usuarioActual = AuthService.getAuthenticatedUser();
         if (usuarioActual != null && usuarioActual.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR") || a.getAuthority().equals("ROLE_SUPERADMIN") || a.getAuthority().equals("CASH_REGISTER_VIEW"))) {
@@ -380,7 +379,7 @@ public class MainLayout extends AppLayout {
         String[] permisos = {"MENU_DASHBOARD", null, "MENU_MI_AGENDA", "MENU_CITAS", "MENU_PACIENTES", "MENU_MEDICOS",
                 "MENU_ESPECIALIDADES", "MENU_HORARIOS", "MENU_CONSULTORIOS", "MENU_SEGUROS", "MENU_SERVICIOS", null,
                 "MENU_USUARIOS", "MENU_ROLES", null, null, "MENU_SIGNOS_VITALES", "MENU_CONSULTA_MEDICA", "MENU_EXPEDIENTE_CLINICO", "MENU_ANTECEDENTES", "MENU_ALERGIAS", "MENU_DIAGNOSTICOS", "MENU_TRATAMIENTOS", "MENU_RECETAS", "MENU_ORDENES_ESTUDIOS", "MENU_RECORDATORIOS",
-                "MENU_DOCUMENTOS", null, "MENU_FACTURACION", "MENU_ECF", "MENU_CAJA", "MENU_PAGOS", "MENU_CUENTAS_COBRAR", "MENU_INVENTARIO", "MENU_LABORATORIO", "MENU_REPORTES_FINANCIEROS", null, "MENU_REPORTES", "MENU_GESTION_CONTROL", "MENU_AUDITORIA", null};
+                "MENU_DOCUMENTOS", null, "MENU_FACTURACION", "MENU_CAJA", "MENU_PAGOS", "MENU_CUENTAS_COBRAR", "MENU_INVENTARIO", "MENU_LABORATORIO", "MENU_REPORTES_FINANCIEROS", null, "MENU_REPORTES", "MENU_GESTION_CONTROL", "MENU_AUDITORIA", null};
         var elementos = nav.getElement().getChildren().toList();
         boolean puedeAccederRecepcion = esAdministrador || usuario.getAuthorities().stream()
                 .anyMatch(authority -> "MENU_APROBACION_CITAS".equals(authority.getAuthority())

@@ -4,8 +4,10 @@ import com.citacloud.app.models.Empresa;
 import com.citacloud.app.models.Usuario;
 import com.citacloud.app.repositories.EmpresaRepository;
 import com.citacloud.app.repositories.UsuarioRepository;
+import com.citacloud.app.services.MetricasSeguridad;
 import com.vaadin.flow.server.VaadinSession;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -24,43 +26,51 @@ public class AuthService {
     private final EmpresaRepository empresaRepository;
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final MetricasSeguridad metricas;
 
     public AuthService(EmpresaRepository empresaRepository, UsuarioRepository usuarioRepository,
                        PasswordEncoder passwordEncoder) {
+        this(empresaRepository, usuarioRepository, passwordEncoder, null);
+    }
+
+    @Autowired
+    public AuthService(EmpresaRepository empresaRepository, UsuarioRepository usuarioRepository,
+                       PasswordEncoder passwordEncoder, MetricasSeguridad metricas) {
         this.empresaRepository = empresaRepository;
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.metricas = metricas;
     }
 
     public boolean login(String empresaCodigo, String username, String password) {
         if (empresaCodigo == null || empresaCodigo.isBlank() ||
             username == null || username.isBlank() ||
             password == null || password.isBlank()) {
-            return false;
+            return accesoFallido();
         }
 
         // 1. Buscar empresa por código
         Optional<Empresa> empresaOpt = empresaRepository.findByCodigo(empresaCodigo.trim().toUpperCase());
         if (empresaOpt.isEmpty()) {
-            return false;
+            return accesoFallido();
         }
 
         Empresa empresa = empresaOpt.get();
         // 2. Validar empresa activa
         if (!Boolean.TRUE.equals(empresa.getActiva())) {
-            return false;
+            return accesoFallido();
         }
 
         // 3. Buscar usuario en la empresa
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmpresaIdAndUsuario(empresa.getId(), username.trim());
         if (usuarioOpt.isEmpty()) {
-            return false;
+            return accesoFallido();
         }
 
         Usuario usuario = usuarioOpt.get();
         // 4. Validar estado del usuario
         if (!Boolean.TRUE.equals(usuario.getActivo())) {
-            return false;
+            return accesoFallido();
         }
 
         // 5. Validar contraseña exclusivamente contra su hash BCrypt.
@@ -74,7 +84,7 @@ public class AuthService {
         }
 
         if (!passwordMatches) {
-            return false;
+            return accesoFallido();
         }
 
         // 6. Roles y authorities
@@ -112,7 +122,13 @@ public class AuthService {
             );
         }
 
+        if (metricas != null) metricas.accesoCorrecto();
         return true;
+    }
+
+    private boolean accesoFallido() {
+        if (metricas != null) metricas.accesoFallido();
+        return false;
     }
 
     public static TenantUserDetails getAuthenticatedUser() {

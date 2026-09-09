@@ -24,7 +24,10 @@ public class SecurityConfig extends VaadinWebSecurity {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/images/**", "/line-awesome/**", "/uploads/**").permitAll()
+                        .requestMatchers("/images/**", "/line-awesome/**", "/uploads/**",
+                                "/health", "/health/**", "/metrics", "/info",
+                                "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**",
+                                "/webjars/swagger-ui/**").permitAll()
                 )
                 .logout(logout -> logout
                         .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))

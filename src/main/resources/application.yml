@@ -17,6 +17,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        session.events.log.LOG_QUERIES_SLOWER_THAN_MS: ${DB_SLOW_QUERY_THRESHOLD_MS:1000}
     show-sql: false
     open-in-view: false
   flyway:
@@ -24,6 +25,13 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
     baseline-version: 0
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${MAIL_STARTTLS:true}
 
 server:
   servlet:
@@ -34,5 +42,76 @@ vaadin:
   launch-browser: false
   whitelisted-packages: com.citacloud.app
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: false
+    try-it-out-enabled: false
+    operations-sorter: method
+    tags-sorter: alpha
+
+management:
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: health,prometheus,info
+      path-mapping:
+        prometheus: metrics
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
+      probes:
+        enabled: true
+      group:
+        live:
+          include: livenessState
+        ready:
+          include: readinessState,db,diskSpace
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    tags:
+      service: ${OTEL_SERVICE_NAME:cita-cloud-api}
+      environment: ${DEPLOYMENT_ENVIRONMENT:development}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        email.send.duration: true
+        whatsapp.send.duration: true
+        pdf.generation.duration: true
+  tracing:
+    enabled: ${OBSERVABILITY_TRACING_ENABLED:false}
+    sampling:
+      probability: ${OTEL_TRACES_SAMPLER_ARG:1.0}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
+
+info:
+  app:
+    name: ${OTEL_SERVICE_NAME:cita-cloud-api}
+    environment: ${DEPLOYMENT_ENVIRONMENT:development}
+
 app:
   upload-dir: uploads
+  observability:
+    service-name: ${OTEL_SERVICE_NAME:cita-cloud-api}
+    environment: ${DEPLOYMENT_ENVIRONMENT:development}
+    slow-http-threshold-ms: ${HTTP_SLOW_REQUEST_THRESHOLD_MS:1000}
+  notifications:
+    email:
+      configured: ${NOTIFICATIONS_EMAIL_CONFIGURED:false}
+    whatsapp:
+      configured: ${NOTIFICATIONS_WHATSAPP_CONFIGURED:false}
+      api-url: ${NOTIFICATIONS_WHATSAPP_API_URL:}
+      token: ${NOTIFICATIONS_WHATSAPP_TOKEN:}
+    worker:
+      delay-ms: ${NOTIFICATIONS_WORKER_DELAY_MS:15000}
+      max-attempts: ${NOTIFICATIONS_MAX_ATTEMPTS:3}

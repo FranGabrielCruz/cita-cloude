@@ -127,7 +127,6 @@ public class FacturacionView extends VerticalLayout {
         tabla.addColumn(f -> dinero(f.getMontoPagado())).setHeader("Pagado").setAutoWidth(true);
         tabla.addColumn(f -> dinero(f.getSaldo())).setHeader("Pendiente").setAutoWidth(true);
         tabla.addComponentColumn(f -> badge(f.getEstado())).setHeader("Estado").setAutoWidth(true);
-        tabla.addColumn(f -> estadoEcf(f.getEstadoEcf())).setHeader("e-CF").setAutoWidth(true);
         tabla.addComponentColumn(this::accionesTabla).setHeader("Acciones").setAutoWidth(true).setFlexGrow(0);
         tabla.setWidthFull(); tabla.setAllRowsVisible(true); tabla.addClassName("facturacion-tabla");
         vacio.getStyle().set("display", "block").set("padding", "2rem").set("text-align", "center").set("color", "var(--lumo-secondary-text-color)");
@@ -226,7 +225,7 @@ public class FacturacionView extends VerticalLayout {
         try { factura = facturacion.obtener(empresaId, facturaInicial.getId()); } catch (Exception e) { aviso(e); return; }
         Dialog dialogo = new Dialog(); dialogo.setHeaderTitle("FACTURA " + factura.getNumero()); dialogo.setWidth("min(1050px, 97vw)"); dialogo.setMaxHeight("94vh");
         FormLayout datos = new FormLayout(); datos.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1), new FormLayout.ResponsiveStep("650px", 3));
-        datos.addFormItem(new Span(fecha(factura.getFecha())), "Fecha"); datos.addFormItem(badge(factura.getEstado()), "Estado"); datos.addFormItem(new Span(estadoEcf(factura.getEstadoEcf())), "e-CF"); datos.addFormItem(new Span(factura.getPaciente().getNombreCompleto()), "Paciente"); datos.addFormItem(new Span(factura.getMedico() == null ? "No aplica" : factura.getMedico().getNombreCompleto()), "Médico"); datos.addFormItem(new Span(factura.getSucursal() == null ? "-" : factura.getSucursal().getNombre()), "Sucursal"); datos.addFormItem(new Span(comprobanteFiscal(factura)), "Comprobante fiscal");
+        datos.addFormItem(new Span(fecha(factura.getFecha())), "Fecha"); datos.addFormItem(badge(factura.getEstado()), "Estado"); datos.addFormItem(new Span(factura.getPaciente().getNombreCompleto()), "Paciente"); datos.addFormItem(new Span(factura.getMedico() == null ? "No aplica" : factura.getMedico().getNombreCompleto()), "Médico"); datos.addFormItem(new Span(factura.getSucursal() == null ? "-" : factura.getSucursal().getNombre()), "Sucursal"); datos.addFormItem(new Span(comprobanteFiscal(factura)), "Comprobante fiscal");
         List<DetalleFactura> lineas = facturacion.detalles(empresaId, factura.getId()); Grid<DetalleFactura> grid = new Grid<>(DetalleFactura.class, false); grid.addColumn(DetalleFactura::getDescripcion).setHeader("Descripción").setFlexGrow(1); grid.addColumn(d -> numero(d.getCantidad())).setHeader("Cant."); grid.addColumn(d -> dinero(d.getPrecio())).setHeader("Precio"); grid.addColumn(d -> dinero(d.getDescuento())).setHeader("Descuento"); grid.addColumn(d -> dinero(d.getImpuesto())).setHeader("Impuesto"); grid.addColumn(d -> dinero(d.getImporte())).setHeader("Total"); grid.setItems(lineas); grid.setAllRowsVisible(true); grid.setWidthFull();
         Div resumen = resumenFactura(factura); List<Pago> listaPagos = facturacion.pagos(empresaId, factura.getId()); Grid<Pago> pagos = new Grid<>(Pago.class, false); pagos.addColumn(p -> texto(p.getNumero())).setHeader("Pago"); pagos.addColumn(p -> p.getCreadoEn() == null ? fecha(p.getFecha()) : p.getCreadoEn().format(FECHA_HORA)).setHeader("Fecha"); pagos.addColumn(Pago::getMetodoPago).setHeader("Método"); pagos.addColumn(p -> dinero(p.getMonto())).setHeader("Monto"); pagos.addColumn(Pago::getEstado).setHeader("Estado"); pagos.setItems(listaPagos); pagos.setAllRowsVisible(true); pagos.setVisible(!listaPagos.isEmpty());
         VerticalLayout contenido = new VerticalLayout(datos, new H3("DETALLE"), grid, new H3("RESUMEN"), resumen, new H3("PAGOS"), pagos); contenido.setPadding(false); dialogo.add(contenido);
@@ -372,7 +371,6 @@ public class FacturacionView extends VerticalLayout {
     private String dinero(BigDecimal valor) { return "RD$ " + numero(valor); }
     private String numero(BigDecimal valor) { return FormatoMonto.format(valor == null ? BigDecimal.ZERO : valor); }
     private String texto(String valor) { return valor == null ? "" : valor; }
-    private String estadoEcf(String valor) { return valor == null || "NO_APLICA".equals(valor) ? "No aplica" : valor.replace('_', ' '); }
     private String comprobanteFiscal(Factura factura) { String etiqueta = SecuenciaComprobanteFiscalService.etiqueta(factura.getTipoComprobante()); return factura.getNumeroComprobanteFiscal() == null ? etiqueta : etiqueta + " · " + factura.getNumeroComprobanteFiscal(); }
     private void aviso(Exception e) { Notification.show(e.getMessage() == null ? "No se pudo completar la operación." : e.getMessage(), 5000, Notification.Position.MIDDLE); }
 

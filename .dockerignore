@@ -11,4 +11,6 @@ uploads
 !.env.example
 *.log
 *.iml
-
+storage
+output
+tmp
