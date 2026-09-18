@@ -1,0 +1,49 @@
+groups:
+  - name: cita-cloud-api
+    rules:
+      - alert: CitaCloudApiNoDisponible
+        expr: up{job="cita-cloud-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CitaCloud API no responde"
+
+      - alert: CitaCloudTasaErroresAlta
+        expr: sum(rate(http_server_requests_seconds_count{job="cita-cloud-api",status=~"5.."}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count{job="cita-cloud-api"}[5m])), 0.001) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Más de 5% de solicitudes terminan en error"
+
+      - alert: CitaCloudLatenciaP95Alta
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job="cita-cloud-api"}[5m]))) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "La latencia p95 supera un segundo"
+
+      - alert: CitaCloudColaNotificacionesAtrasada
+        expr: notification_queue_oldest_age_seconds{job="cita-cloud-api"} > 900
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Hay notificaciones pendientes por más de 15 minutos"
+
+      - alert: CitaCloudFallosCorreo
+        expr: increase(email_failed_total{job="cita-cloud-api"}[10m]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "Se detectaron fallos recientes al enviar correo"
+
+      - alert: CitaCloudPoolConexionSaturado
+        expr: hikaricp_connections_active{job="cita-cloud-api"} / clamp_min(hikaricp_connections_max{job="cita-cloud-api"}, 1) > 0.9
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "El pool de conexiones está por encima de 90%"

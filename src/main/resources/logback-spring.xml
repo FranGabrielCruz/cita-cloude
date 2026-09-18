@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty scope="context" name="SERVICE_NAME" source="app.observability.service-name" defaultValue="cita-cloud-api"/>
+    <springProperty scope="context" name="ENVIRONMENT" source="app.observability.environment" defaultValue="development"/>
+
+    <springProfile name="production | staging">
+        <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <customFields>{"service":"${SERVICE_NAME}","environment":"${ENVIRONMENT}"}</customFields>
+                <includeMdc>true</includeMdc>
+            </encoder>
+        </appender>
+        <root level="INFO">
+            <appender-ref ref="JSON"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="!production &amp; !staging">
+        <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%clr(%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}){faint} %clr(%5p) %clr([%X{requestId:-},%X{traceId:-},%X{spanId:-}]){yellow} %clr(%-40.40logger{39}){cyan} : %m%n%wEx</pattern>
+            </encoder>
+        </appender>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+</configuration>

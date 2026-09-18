@@ -1,0 +1,94 @@
+services:
+  citacloud:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: citacloud:local
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8081:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: staging
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      NOTIFICATIONS_EMAIL_CONFIGURED: ${NOTIFICATIONS_EMAIL_CONFIGURED:-false}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-true}
+      MAIL_STARTTLS: ${MAIL_STARTTLS:-true}
+      NOTIFICATIONS_EMAIL_FROM: ${NOTIFICATIONS_EMAIL_FROM:-}
+      NOTIFICATIONS_WHATSAPP_CONFIGURED: ${NOTIFICATIONS_WHATSAPP_CONFIGURED:-false}
+      NOTIFICATIONS_WHATSAPP_API_URL: ${NOTIFICATIONS_WHATSAPP_API_URL:-}
+      NOTIFICATIONS_WHATSAPP_TOKEN: ${NOTIFICATIONS_WHATSAPP_TOKEN:-}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-cita-cloud-api}
+      DEPLOYMENT_ENVIRONMENT: ${DEPLOYMENT_ENVIRONMENT:-staging}
+      OBSERVABILITY_TRACING_ENABLED: ${OBSERVABILITY_TRACING_ENABLED:-true}
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://otel-collector:4318/v1/traces
+      OTEL_TRACES_SAMPLER_ARG: ${OTEL_TRACES_SAMPLER_ARG:-0.20}
+      HTTP_SLOW_REQUEST_THRESHOLD_MS: ${HTTP_SLOW_REQUEST_THRESHOLD_MS:-1000}
+      DB_SLOW_QUERY_THRESHOLD_MS: ${DB_SLOW_QUERY_THRESHOLD_MS:-1000}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./storage:/app/storage
+    depends_on:
+      otel-collector:
+        condition: service_started
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.160.0
+    restart: unless-stopped
+    command: ["--config=/etc/otelcol-contrib/config.yml"]
+    volumes:
+      - ./observability/otel-collector.yml:/etc/otelcol-contrib/config.yml:ro
+    ports:
+      - "127.0.0.1:4317:4317"
+      - "127.0.0.1:4318:4318"
+
+  prometheus:
+    image: prom/prometheus:v3.12.0
+    restart: unless-stopped
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=15d"]
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      citacloud:
+        condition: service_healthy
+
+  grafana:
+    image: grafana/grafana:13.2.1
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-change-me-before-production}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - prometheus
+
+  cadvisor:
+    image: ghcr.io/google/cadvisor:v0.60.5
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    ports:
+      - "127.0.0.1:8082:8080"
+
+volumes:
+  prometheus-data:
+  grafana-data:

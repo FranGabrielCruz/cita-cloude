@@ -1,0 +1,3 @@
+package com.citacloud.app.models;
+import jakarta.persistence.*; import java.util.UUID;
+@Entity @Table(name="unidades_inventario") public class UnidadInventario { @Id @GeneratedValue private UUID id; @Column(name="empresa_id") private UUID empresaId; private String nombre; private String abreviatura; private boolean activa=true; public UUID getId(){return id;} public void setEmpresaId(UUID v){empresaId=v;} public String getNombre(){return nombre;} public void setNombre(String v){nombre=v;} public String getAbreviatura(){return abreviatura;} public void setAbreviatura(String v){abreviatura=v;} public boolean isActiva(){return activa;} }

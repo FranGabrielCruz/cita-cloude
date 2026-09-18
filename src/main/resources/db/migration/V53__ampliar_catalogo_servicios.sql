@@ -1,0 +1,11 @@
+ALTER TABLE servicios ADD COLUMN IF NOT EXISTS tipo VARCHAR(30) NOT NULL DEFAULT 'CONSULTA';
+ALTER TABLE servicios ADD COLUMN IF NOT EXISTS especialidad_id UUID REFERENCES especialidades(id);
+ALTER TABLE servicios ADD COLUMN IF NOT EXISTS duracion_minutos INTEGER;
+ALTER TABLE servicios ADD COLUMN IF NOT EXISTS disponible_citas BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE servicios ADD COLUMN IF NOT EXISTS facturable BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE servicios ADD COLUMN IF NOT EXISTS creado_por UUID REFERENCES usuarios(id);
+ALTER TABLE servicios ADD COLUMN IF NOT EXISTS actualizado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+CREATE INDEX IF NOT EXISTS idx_servicios_empresa_activo ON servicios(empresa_id, activo);
+CREATE INDEX IF NOT EXISTS idx_servicios_empresa_especialidad ON servicios(empresa_id, especialidad_id);
+INSERT INTO permisos (codigo,nombre,descripcion) VALUES ('MENU_SERVICIOS','Servicios','Acceder al catálogo de servicios'),('SERVICES_VIEW','Ver servicios','Consultar servicios'),('SERVICES_CREATE','Crear servicios','Crear servicios'),('SERVICES_EDIT','Editar servicios','Editar servicios'),('SERVICES_STATUS','Activar/desactivar servicios','Cambiar disponibilidad de servicios') ON CONFLICT (codigo) DO NOTHING;
+INSERT INTO rol_permisos (rol_id,permiso_id) SELECT r.id,p.id FROM roles r CROSS JOIN permisos p WHERE r.nombre='ADMINISTRADOR' AND p.codigo IN ('MENU_SERVICIOS','SERVICES_VIEW','SERVICES_CREATE','SERVICES_EDIT','SERVICES_STATUS') ON CONFLICT DO NOTHING;
